@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Studio — Custom Orders</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    .process-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0;
+      border-top: 1px solid var(--light-line);
+    }
+    .step {
+      padding: 2.5rem 2rem;
+      border-right: 1px solid var(--light-line);
+      border-bottom: 1px solid var(--light-line);
+    }
+    .step:last-child { border-right: none; }
+    .step-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3rem;
+      font-weight: 300;
+      color: var(--light-line);
+      line-height: 1;
+      margin-bottom: 0.8rem;
+    }
+    .step h4 {
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 0.6rem;
+      color: var(--ink);
+    }
+    .step p {
+      font-size: 0.82rem;
+      line-height: 1.65;
+      color: var(--warm-gray);
+    }
+    .order-form-wrap {
+      padding: 4rem 5rem;
+      max-width: 700px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 768px) {
+      .order-form-wrap { padding: 2.5rem 1.5rem; }
+      .form-row { grid-template-columns: 1fr; gap: 0; }
+      .step { border-right: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <button id="hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <div id="nav-overlay"></div>
+
+  <nav id="sidebar">
+    <div class="nav-brand">
+      <h1>The Studio</h1>
+      <span>Handcrafted Originals</span>
+    </div>
+    <ul>
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="artwork.html">The Artwork</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="workspace.html">The Workspace</a></li>
+      <li><a href="custom-orders.html">Custom Orders</a></li>
+    </ul>
+    <div class="nav-footer">&copy; 2025 The Studio</div>
+  </nav>
+
+  <main>
+    <div class="page-hero">
+      <p class="eyebrow">Commission</p>
+      <h2>Something made<br>just for <em>you</em></h2>
+    </div>
+
+    <div class="content-section">
+      <p>
+        Custom commissions are a core part of what I do. Whether you have a clear vision or 
+        just a feeling you're trying to capture, we'll work through it together. Fill out the 
+        form below to get the conversation started — no commitment required.
+      </p>
+      <p>
+        Current lead time is approximately <strong>[X weeks]</strong>. A 50% deposit is required 
+        to hold your spot, with the remainder due upon completion.
+      </p>
+    </div>
+
+    <div class="process-steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h4>Inquiry</h4>
+        <p>Fill out the form with your ideas, timeline, and budget range.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h4>Consultation</h4>
+        <p>We'll connect via email (or a quick call) to refine the concept.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h4>Creation</h4>
+        <p>I'll get to work, with progress updates along the way.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <h4>Delivery</h4>
+        <p>Carefully packaged and shipped, or available for local pickup.</p>
+      </div>
+    </div>
+
+    <div class="order-form-wrap">
+      <form onsubmit="handleOrder(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="o-name">Your Name</label>
+            <input type="text" id="o-name" required />
+          </div>
+          <div class="form-group">
+            <label for="o-email">Email</label>
+            <input type="email" id="o-email" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="o-size">Approximate Size</label>
+            <select id="o-size">
+              <option value="">— Select —</option>
+              <option>Small (under 12 in)</option>
+              <option>Medium (12–24 in)</option>
+              <option>Large (24–36 in)</option>
+              <option>Extra Large (36+ in)</option>
+              <option>Not sure yet</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="o-budget">Budget Range</label>
+            <select id="o-budget">
+              <option value="">— Select —</option>
+              <option>Under $300</option>
+              <option>$300–$600</option>
+              <option>$600–$1,200</option>
+              <option>$1,200+</option>
+              <option>Let's discuss</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="o-medium">Preferred Medium</label>
+          <select id="o-medium">
+            <option value="">— Select —</option>
+            <option>Oil</option>
+            <option>Acrylic</option>
+            <option>Graphite / Drawing</option>
+            <option>Mixed Media</option>
+            <option>Open to suggestions</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="o-timeline">Desired Timeline</label>
+          <input type="text" id="o-timeline" placeholder="e.g. By end of March, no rush, etc." />
+        </div>
+
+        <div class="form-group">
+          <label for="o-vision">Tell me about your vision</label>
+          <textarea id="o-vision" style="min-height:160px;" 
+            placeholder="Colors, mood, subject matter, where it will live, what it means to you — any details help."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-rust">Submit Inquiry</button>
+        <p id="order-success" style="display:none;margin-top:1.2rem;font-size:0.8rem;color:var(--rust);letter-spacing:0.1em;">
+          ✓ Inquiry received — I'll follow up within 1–2 days.
+        </p>
+      </form>
+    </div>
+  </main>
+
+  <script src="../assets/js/nav.js"></script>
+  <script>
+    function handleOrder(e) {
+      e.preventDefault();
+      document.getElementById('order-success').style.display = 'block';
+      e.target.reset();
+    }
+  </script>
+</body>
+</html>
