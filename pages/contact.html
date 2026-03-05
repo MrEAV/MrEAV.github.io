@@ -102,7 +102,7 @@
 
         <div class="contact-detail">
           <p class="label">Email</p>
-          <p class="value"><a href="mailto:eavglass@gmail.com">eavglass@gmail.com</a></p>
+          <p class="value"><a href="mailto:eavglasscontact@gmail.com">eavglasscontact@gmail.com</a></p>
         </div>
         <div class="contact-detail">
           <p class="label">Instagram</p>
@@ -118,14 +118,14 @@
         </div>
 
         <div class="qr-code">
-          <img src="../assets/images/Screenshot QR code.jpg" alt="EAV Glass Instagram QR Code" />
+          <img src="../assets/images/qr-code.jpg" alt="EAV Glass Instagram QR Code" />
           <p>Scan to follow on Instagram</p>
         </div>
 
       </div>
 
       <div class="contact-form-wrap">
-        <form id="contact-form" onsubmit="handleSubmit(event)">
+        <form id="contact-form" action="https://formspree.io/f/xojkavdl" method="POST">
           <div class="form-group">
             <label for="name">Your Name</label>
             <input type="text" id="name" name="name" required />
@@ -149,21 +149,11 @@
             <textarea id="message" name="message" required></textarea>
           </div>
           <button type="submit" class="btn">Send Message</button>
-          <p id="form-success" style="display:none;margin-top:1.2rem;font-size:0.8rem;color:var(--rust);letter-spacing:0.1em;">
-            ✓ Message sent — I'll be in touch soon.
-          </p>
         </form>
       </div>
     </div>
   </main>
 
   <script src="../assets/js/nav.js"></script>
-  <script>
-    function handleSubmit(e) {
-      e.preventDefault();
-      document.getElementById('form-success').style.display = 'block';
-      e.target.reset();
-    }
-  </script>
 </body>
 </html>
