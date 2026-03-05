@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EAV Glass — The Headspace</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    .blog-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 0;
+      border-top: 1px solid var(--light-line);
+    }
+    .blog-post {
+      padding: 2.5rem 2.5rem;
+      border-right: 1px solid var(--light-line);
+      border-bottom: 1px solid var(--light-line);
+    }
+    .blog-post:last-child { border-right: none; }
+    .blog-date {
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+      margin-bottom: 0.6rem;
+    }
+    .blog-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 400;
+      margin-bottom: 0.8rem;
+      color: var(--ink);
+    }
+    .blog-excerpt {
+      font-size: 0.85rem;
+      line-height: 1.75;
+      color: var(--warm-gray);
+      margin-bottom: 1.2rem;
+    }
+    .blog-read-more {
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--rust);
+      text-decoration: none;
+      border-bottom: 1px solid var(--rust);
+      padding-bottom: 0.1rem;
+      transition: opacity 0.2s;
+    }
+    .blog-read-more:hover { opacity: 0.6; }
+    .blog-tag {
+      display: inline-block;
+      font-size: 0.58rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      border: 1px solid var(--light-line);
+      color: var(--warm-gray);
+      padding: 0.2rem 0.6rem;
+      margin-bottom: 1rem;
+    }
+    @media (max-width: 768px) {
+      .blog-post { padding: 2rem 1.5rem; border-right: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <button id="hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <div id="nav-overlay"></div>
+
+  <nav id="sidebar">
+    <div class="nav-brand">
+      <h1>EAV Glass</h1>
+      <span>Handcrafted Originals</span>
+    </div>
+    <ul>
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="artwork.html">The Artwork</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="workspace.html">The Workspace</a></li>
+      <li><a href="custom-orders.html">Custom Orders</a></li>
+      <li><a href="headspace.html">The Headspace</a></li>
+    </ul>
+    <div class="nav-footer">&copy; 2025 EAV Glass</div>
+  </nav>
+
+  <main>
+    <div class="page-hero">
+      <p class="eyebrow">The Headspace</p>
+      <h2>Thoughts from<br>the <em>torch</em></h2>
+    </div>
+
+    <div class="content-section">
+      <p>
+        This is where I think out loud — about glass, about process, about the pieces 
+        that surprise me and the ones that don't cooperate. Pull up a chair.
+      </p>
+    </div>
+
+    <div class="blog-grid">
+
+      <!-- POST 1 — replace with your real content -->
+      <div class="blog-post">
+        <p class="blog-date">March 2025</p>
+        <span class="blog-tag">Process</span>
+        <h3 class="blog-title">Why I keep coming back to marbles</h3>
+        <p class="blog-excerpt">
+          There's something meditative about working a marble. The symmetry, the 
+          gravity, the way color moves differently inside a sphere than it does in 
+          a flat piece. Write your thoughts here...
+        </p>
+      </div>
+
+      <!-- POST 2 — replace with your real content -->
+      <div class="blog-post">
+        <p class="blog-date">February 2025</p>
+        <span class="blog-tag">Inspiration</span>
+        <h3 class="blog-title">What nature teaches the torch</h3>
+        <p class="blog-excerpt">
+          The dragonfly piece started with a walk outside. I keep a sketchbook 
+          but honestly most of my best ideas come from just paying attention. 
+          Write your thoughts here...
+        </p>
+      </div>
+
+      <!-- POST 3 — replace with your real content -->
+      <div class="blog-post">
+        <p class="blog-date">January 2025</p>
+        <span class="blog-tag">Behind the Scenes</span>
+        <h3 class="blog-title">The tools I can't work without</h3>
+        <p class="blog-excerpt">
+          People always ask what's on my bench. The honest answer is too much. 
+          But there are a handful of tools I reach for every single session. 
+          Write your thoughts here...
+        </p>
+      </div>
+
+      <!-- COPY AND PASTE A BLOCK ABOVE TO ADD MORE POSTS -->
+
+    </div>
+  </main>
+
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>
