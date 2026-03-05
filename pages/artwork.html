@@ -3,17 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Studio — The Artwork</title>
+  <title>EAV Glass — The Artwork</title>
   <link rel="stylesheet" href="../assets/css/style.css" />
   <style>
     .artwork-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 2rem;
       padding: 3rem 5rem 4rem;
     }
-    .artwork-item {}
-    .artwork-item .artwork-placeholder {
+    .artwork-item img {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+      display: block;
       margin-bottom: 1rem;
     }
     .artwork-item .artwork-title {
@@ -32,32 +35,8 @@
       color: var(--rust);
       margin-top: 0.4rem;
     }
-    .filter-bar {
-      padding: 1.5rem 5rem;
-      border-bottom: 1px solid var(--light-line);
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-    .filter-btn {
-      font-size: 0.62rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      background: none;
-      border: 1px solid var(--light-line);
-      padding: 0.4rem 1rem;
-      cursor: pointer;
-      color: var(--warm-gray);
-      font-family: 'Jost', sans-serif;
-      transition: all 0.2s;
-    }
-    .filter-btn:hover, .filter-btn.active {
-      border-color: var(--ink);
-      color: var(--ink);
-    }
     @media (max-width: 768px) {
       .artwork-grid { padding: 2rem 1.5rem; }
-      .filter-bar { padding: 1rem 1.5rem; }
     }
   </style>
 </head>
@@ -70,7 +49,7 @@
 
   <nav id="sidebar">
     <div class="nav-brand">
-      <h1>The Studio</h1>
+      <h1>EAV Glass</h1>
       <span>Handcrafted Originals</span>
     </div>
     <ul>
@@ -81,7 +60,7 @@
       <li><a href="workspace.html">The Workspace</a></li>
       <li><a href="custom-orders.html">Custom Orders</a></li>
     </ul>
-    <div class="nav-footer">&copy; 2025 The Studio</div>
+    <div class="nav-footer">&copy; 2025 EAV Glass</div>
   </nav>
 
   <main>
@@ -90,63 +69,21 @@
       <h2>The <em>Artwork</em></h2>
     </div>
 
-    <div class="filter-bar">
-      <button class="filter-btn active">All</button>
-      <button class="filter-btn">Paintings</button>
-      <button class="filter-btn">Drawings</button>
-      <button class="filter-btn">Mixed Media</button>
-      <button class="filter-btn">Available</button>
-    </div>
-
     <div class="artwork-grid">
-      <!-- Placeholder pieces — replace with real images -->
+
       <div class="artwork-item">
-        <div class="artwork-placeholder">Image</div>
-        <p class="artwork-title">Untitled No. 1</p>
-        <p class="artwork-meta">Oil on canvas · 18 × 24 in</p>
-        <p class="artwork-price">$480 · Available</p>
+        <img src="../assets/images/EAVmarbleblackbackgrounbs.jpg" alt="EAV Glass Marble Piece" />
+        <p class="artwork-title">Marble Series No. 1</p>
+        <p class="artwork-meta">Handcrafted Glass · One of a Kind</p>
+        <p class="artwork-price">Contact for pricing</p>
       </div>
-      <div class="artwork-item">
-        <div class="artwork-placeholder">Image</div>
-        <p class="artwork-title">Study in Ochre</p>
-        <p class="artwork-meta">Acrylic · 12 × 16 in</p>
-        <p class="artwork-price">$220 · Available</p>
-      </div>
-      <div class="artwork-item">
-        <div class="artwork-placeholder">Image</div>
-        <p class="artwork-title">The Quiet Room</p>
-        <p class="artwork-meta">Mixed media · 20 × 20 in</p>
-        <p class="artwork-price">$650 · Sold</p>
-      </div>
-      <div class="artwork-item">
-        <div class="artwork-placeholder">Image</div>
-        <p class="artwork-title">Morning Study</p>
-        <p class="artwork-meta">Graphite on paper · 9 × 12 in</p>
-        <p class="artwork-price">$130 · Available</p>
-      </div>
-      <div class="artwork-item">
-        <div class="artwork-placeholder">Image</div>
-        <p class="artwork-title">Rust + Bone</p>
-        <p class="artwork-meta">Oil on panel · 24 × 30 in</p>
-        <p class="artwork-price">$890 · Available</p>
-      </div>
-      <div class="artwork-item">
-        <div class="artwork-placeholder">Image</div>
-        <p class="artwork-title">Accumulation I</p>
-        <p class="artwork-meta">Mixed media · 16 × 20 in</p>
-        <p class="artwork-price">$370 · Available</p>
-      </div>
+
+      <!-- Add more pieces below as you get more photos -->
+      <!-- Copy and paste the block above and change the image name and details -->
+
     </div>
   </main>
 
   <script src="../assets/js/nav.js"></script>
-  <script>
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
-    });
-  </script>
 </body>
 </html>
