@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Studio — Contact</title>
+  <title>EAV Glass — Contact</title>
   <link rel="stylesheet" href="../assets/css/style.css" />
   <style>
     .contact-layout {
@@ -41,6 +41,22 @@
       transition: border-color 0.2s;
     }
     .contact-detail a:hover { border-color: var(--rust); }
+    .qr-code {
+      margin-top: 2rem;
+      max-width: 160px;
+    }
+    .qr-code img {
+      width: 100%;
+      border-radius: 8px;
+    }
+    .qr-code p {
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+      margin-top: 0.5rem;
+      text-align: center;
+    }
     @media (max-width: 900px) {
       .contact-layout { grid-template-columns: 1fr; }
       .contact-info { padding: 2.5rem 1.5rem; border-right: none; border-bottom: 1px solid var(--light-line); }
@@ -57,7 +73,7 @@
 
   <nav id="sidebar">
     <div class="nav-brand">
-      <h1>The Studio</h1>
+      <h1>EAV Glass</h1>
       <span>Handcrafted Originals</span>
     </div>
     <ul>
@@ -68,7 +84,7 @@
       <li><a href="workspace.html">The Workspace</a></li>
       <li><a href="custom-orders.html">Custom Orders</a></li>
     </ul>
-    <div class="nav-footer">&copy; 2025 The Studio</div>
+    <div class="nav-footer">&copy; 2025 EAV Glass</div>
   </nav>
 
   <main>
@@ -80,26 +96,32 @@
     <div class="contact-layout">
       <div class="contact-info">
         <p style="font-size:0.9rem;line-height:1.8;color:#3A3631;margin-bottom:2.5rem;">
-          Questions about a piece, interest in a commission, or just want to say hi — 
+          Questions about a piece, interest in a custom order, or just want to say hi —
           I read everything and reply to every message.
         </p>
 
         <div class="contact-detail">
           <p class="label">Email</p>
-          <p class="value"><a href="mailto:hello@yourstudio.com">hello@yourstudio.com</a></p>
+          <p class="value"><a href="mailto:eavglass@gmail.com">eavglass@gmail.com</a></p>
         </div>
         <div class="contact-detail">
           <p class="label">Instagram</p>
-          <p class="value"><a href="#">@yourstudiohandle</a></p>
+          <p class="value"><a href="https://instagram.com/eavglass" target="_blank">@eavglass</a></p>
         </div>
         <div class="contact-detail">
           <p class="label">Location</p>
-          <p class="value">Your City, State</p>
+          <p class="value">NC, USA</p>
         </div>
         <div class="contact-detail">
           <p class="label">Response Time</p>
           <p class="value" style="font-size:0.9rem;font-family:'Jost',sans-serif;font-weight:300;">Usually within 1–2 business days</p>
         </div>
+
+        <div class="qr-code">
+          <img src="../assets/images/Screenshot QR code.jpg" alt="EAV Glass Instagram QR Code" />
+          <p>Scan to follow on Instagram</p>
+        </div>
+
       </div>
 
       <div class="contact-form-wrap">
