@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pi IDS — EAV Vault</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brass: #c8922a; --brass-light: #f0c060; --brass-dark: #8b6010;
+      --iron: #2a2a2a; --parchment: #c8a878;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f0d0a;
+      color: var(--parchment);
+      font-family: 'Crimson Text', serif;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .bg {
+      position: fixed; inset: 0; z-index: 0;
+      background:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,0,0,0.25) 39px, rgba(0,0,0,0.25) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,0,0,0.25) 39px, rgba(0,0,0,0.25) 40px),
+        radial-gradient(ellipse at 50% 50%, #1a1510 0%, #080604 100%);
+    }
+    .bg::after {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: radial-gradient(circle, rgba(100,80,40,0.35) 1px, transparent 1px);
+      background-size: 40px 40px; background-position: 20px 20px;
+    }
+    .gear { position: fixed; z-index: 1; pointer-events: none; opacity: 0.35; }
+    .gear-tl { top: -60px; left: -60px; width: 200px; animation: cw 22s linear infinite; }
+    .gear-br { bottom: -60px; right: -60px; width: 220px; animation: ccw 28s linear infinite; }
+    .gear-tr { top: 40px; right: -30px; width: 120px; animation: cw 15s linear infinite; }
+    @keyframes cw { to { transform: rotate(360deg); } }
+    @keyframes ccw { to { transform: rotate(-360deg); } }
+
+    .center {
+      position: relative; z-index: 10;
+      text-align: center;
+      padding: 60px 40px;
+      max-width: 600px;
+    }
+    .plate {
+      background: linear-gradient(135deg, #2a2010 0%, #1a1508 50%, #2a1a08 100%);
+      border: 3px solid var(--brass-dark);
+      border-radius: 6px;
+      padding: 50px 40px;
+      position: relative;
+      box-shadow: 0 0 60px rgba(200,146,42,0.1), inset 0 0 40px rgba(0,0,0,0.6);
+    }
+    .bolt {
+      position: absolute;
+      width: 14px; height: 14px;
+      background: radial-gradient(circle, #aaa090 0%, #555045 60%, #222018 100%);
+      border-radius: 50%; border: 1px solid #666055;
+    }
+    .bolt-tl { top: 10px; left: 10px; }
+    .bolt-tr { top: 10px; right: 10px; }
+    .bolt-bl { bottom: 10px; left: 10px; }
+    .bolt-br { bottom: 10px; right: 10px; }
+
+    .label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem; letter-spacing: 5px;
+      color: var(--brass-dark); text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .icon { font-size: 5rem; margin-bottom: 20px; display: block;
+      filter: drop-shadow(0 0 20px rgba(200,146,42,0.4));
+      animation: pulse 3s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { filter: drop-shadow(0 0 20px rgba(200,146,42,0.4)); }
+      50% { filter: drop-shadow(0 0 40px rgba(200,146,42,0.7)); }
+    }
+    h1 {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      color: var(--brass-light);
+      text-shadow: 0 0 20px rgba(200,146,42,0.4), 2px 2px 0 var(--brass-dark);
+      margin-bottom: 16px;
+    }
+    .status-badge {
+      display: inline-block;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem; letter-spacing: 2px;
+      color: var(--brass); background: rgba(200,146,42,0.1);
+      border: 1px solid rgba(200,146,42,0.3);
+      padding: 4px 14px; border-radius: 2px;
+      margin-bottom: 24px;
+      animation: blink 2s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0.4; } }
+    .desc {
+      font-style: italic;
+      color: #8a7860; line-height: 1.7;
+      margin-bottom: 30px; font-size: 1rem;
+    }
+    .progress-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem; letter-spacing: 3px;
+      color: var(--brass-dark); text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .progress-bar {
+      height: 6px;
+      background: #1a1508;
+      border: 1px solid var(--brass-dark);
+      border-radius: 3px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 15%;
+      background: linear-gradient(90deg, var(--brass-dark), var(--brass-light));
+      border-radius: 3px;
+      box-shadow: 0 0 8px rgba(200,146,42,0.5);
+      animation: progressPulse 2s ease-in-out infinite;
+    }
+    @keyframes progressPulse {
+      0%, 100% { box-shadow: 0 0 8px rgba(200,146,42,0.5); }
+      50% { box-shadow: 0 0 16px rgba(200,146,42,0.8); }
+    }
+    .specs {
+      text-align: left;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #2a2010;
+      border-radius: 4px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+    }
+    .spec-row {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem;
+      color: #555045;
+      padding: 4px 0;
+      border-bottom: 1px solid #1a1508;
+      display: flex; justify-content: space-between;
+    }
+    .spec-row:last-child { border-bottom: none; }
+    .spec-val { color: var(--brass-dark); }
+    .back {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 2px;
+      color: var(--brass-dark); text-decoration: none;
+      text-transform: uppercase; padding: 8px 20px;
+      border: 1px solid var(--brass-dark); border-radius: 3px;
+      transition: all 0.2s; display: inline-block;
+    }
+    .back:hover { color: var(--brass-light); border-color: var(--brass); background: rgba(200,146,42,0.05); }
+
+    .ticker {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
+      background: #0a0805; border-top: 2px solid var(--brass-dark);
+      padding: 5px 0; overflow: hidden;
+    }
+    .ticker-inner {
+      white-space: nowrap;
+      animation: tick 20s linear infinite;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.62rem; letter-spacing: 2px;
+      color: var(--brass-dark);
+    }
+    @keyframes tick { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+
+  <!-- Gears -->
+  <div class="gear gear-tl">
+    <svg viewBox="0 0 100 100" fill="none">
+      <rect x="44" y="0" width="12" height="18" rx="2" fill="#555045"/>
+      <rect x="44" y="82" width="12" height="18" rx="2" fill="#555045"/>
+      <rect x="0" y="44" width="18" height="12" rx="2" fill="#555045"/>
+      <rect x="82" y="44" width="18" height="12" rx="2" fill="#555045"/>
+      <rect x="14" y="14" width="12" height="18" rx="2" fill="#555045" transform="rotate(45 20 20)"/>
+      <rect x="66" y="14" width="12" height="18" rx="2" fill="#555045" transform="rotate(-45 80 20)"/>
+      <circle cx="50" cy="50" r="36" fill="#2a2820" stroke="#555045" stroke-width="3"/>
+      <circle cx="50" cy="50" r="18" fill="#1a1810" stroke="#444035" stroke-width="2"/>
+      <circle cx="50" cy="50" r="7" fill="#888070"/>
+    </svg>
+  </div>
+  <div class="gear gear-br">
+    <svg viewBox="0 0 100 100" fill="none">
+      <rect x="44" y="0" width="12" height="18" rx="2" fill="#555045"/>
+      <rect x="44" y="82" width="12" height="18" rx="2" fill="#555045"/>
+      <rect x="0" y="44" width="18" height="12" rx="2" fill="#555045"/>
+      <rect x="82" y="44" width="18" height="12" rx="2" fill="#555045"/>
+      <rect x="14" y="66" width="12" height="18" rx="2" fill="#555045" transform="rotate(-45 20 80)"/>
+      <rect x="66" y="66" width="12" height="18" rx="2" fill="#555045" transform="rotate(45 80 80)"/>
+      <circle cx="50" cy="50" r="36" fill="#2a2820" stroke="#555045" stroke-width="3"/>
+      <circle cx="50" cy="50" r="20" fill="#1a1810" stroke="#444035" stroke-width="2"/>
+      <circle cx="50" cy="50" r="8" fill="#888070"/>
+    </svg>
+  </div>
+  <div class="gear gear-tr">
+    <svg viewBox="0 0 100 100" fill="none">
+      <rect x="44" y="0" width="12" height="16" rx="2" fill="#555045"/>
+      <rect x="44" y="84" width="12" height="16" rx="2" fill="#555045"/>
+      <rect x="0" y="44" width="16" height="12" rx="2" fill="#555045"/>
+      <rect x="84" y="44" width="16" height="12" rx="2" fill="#555045"/>
+      <circle cx="50" cy="50" r="34" fill="#2a2820" stroke="#555045" stroke-width="3"/>
+      <circle cx="50" cy="50" r="18" fill="#1a1810" stroke="#444035" stroke-width="2"/>
+      <circle cx="50" cy="50" r="7" fill="#888070"/>
+    </svg>
+  </div>
+
+  <div class="center">
+    <div class="plate">
+      <div class="bolt bolt-tl"></div>
+      <div class="bolt bolt-tr"></div>
+      <div class="bolt bolt-bl"></div>
+      <div class="bolt bolt-br"></div>
+      <div class="label">⚙ EAV Workshop — Project Dossier ⚙</div>
+      <span class="icon">🍓</span>
+      <h1>Raspberry Pi IDS</h1>
+      <div class="status-badge">⚙ CONSTRUCTION IN PROGRESS</div>
+      <p class="desc">A home network intrusion detection system running on a Raspberry Pi 4. Watching everything that crawls onto the LAN — and logging it.</p>
+      <div class="progress-label">Build Completion</div>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+      <div class="specs">
+        <div class="spec-row"><span>HARDWARE</span><span class="spec-val">Raspberry Pi 4</span></div>
+        <div class="spec-row"><span>IDS ENGINE</span><span class="spec-val">TBD — Snort / Suricata</span></div>
+        <div class="spec-row"><span>OS</span><span class="spec-val">Raspberry Pi OS Lite</span></div>
+        <div class="spec-row"><span>STATUS</span><span class="spec-val">Planning Phase</span></div>
+        <div class="spec-row"><span>LAST UPDATED</span><span class="spec-val">—</span></div>
+      </div>
+      <a href="vault-hub.html" class="back">⚙ Return to Vault ⚙</a>
+    </div>
+  </div>
+
+  <div class="ticker">
+    <div class="ticker-inner">
+      ⚙ &nbsp; CLASSIFIED BUILD IN PROGRESS &nbsp; ⚙ &nbsp; CHECK BACK LATER &nbsp; ⚙ &nbsp; GEARS ARE TURNING &nbsp; ⚙ &nbsp; PI IS WARMING UP &nbsp; ⚙ &nbsp; CLASSIFIED BUILD IN PROGRESS &nbsp; ⚙ &nbsp; CHECK BACK LATER &nbsp; ⚙
+    </div>
+  </div>
+</body>
+</html>

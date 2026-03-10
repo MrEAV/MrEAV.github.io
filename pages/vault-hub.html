@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Vault — EAV Workshop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brass: #c8922a;
+      --brass-light: #f0c060;
+      --brass-dark: #8b6010;
+      --copper: #b87333;
+      --iron: #2a2a2a;
+      --iron-light: #3a3530;
+      --rust: #8b3a1a;
+      --steam: rgba(200,180,150,0.08);
+      --glow: rgba(200,146,42,0.6);
+      --leather: #3d2810;
+      --parchment: #c8a878;
+      --rivets: #555045;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0f0d0a;
+      color: var(--parchment);
+      font-family: 'Crimson Text', serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='8' fill='none' stroke='%23c8922a' stroke-width='1.5'/%3E%3Ccircle cx='10' cy='10' r='2' fill='%23c8922a'/%3E%3C/svg%3E") 10 10, crosshair;
+    }
+
+    /* ===================== BACKGROUND ===================== */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Iron plate texture */
+    .bg-layer::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,0,0,0.3) 39px, rgba(0,0,0,0.3) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,0,0,0.3) 39px, rgba(0,0,0,0.3) 40px),
+        radial-gradient(ellipse at 20% 20%, #1a1208 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 80%, #120a04 0%, transparent 60%),
+        radial-gradient(ellipse at 50% 50%, #1a1510 0%, #080604 100%);
+    }
+
+    /* Diagonal rivets pattern */
+    .bg-layer::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(100,80,40,0.4) 1px, transparent 1px);
+      background-size: 40px 40px;
+      background-position: 20px 20px;
+    }
+
+    /* ===================== STEAM PIPES ===================== */
+    .pipes {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .pipe-h {
+      position: absolute;
+      height: 18px;
+      background: linear-gradient(180deg, #555045 0%, #2a2820 40%, #3a3530 60%, #1a1810 100%);
+      border-top: 2px solid #666055;
+      border-bottom: 2px solid #111008;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,220,100,0.05);
+    }
+
+    .pipe-v {
+      position: absolute;
+      width: 18px;
+      background: linear-gradient(90deg, #555045 0%, #2a2820 40%, #3a3530 60%, #1a1810 100%);
+      border-left: 2px solid #666055;
+      border-right: 2px solid #111008;
+      box-shadow: 4px 0 8px rgba(0,0,0,0.6), inset 2px 0 4px rgba(255,220,100,0.05);
+    }
+
+    .pipe-joint {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      background: radial-gradient(circle, #888070 0%, #444035 50%, #222018 100%);
+      border-radius: 50%;
+      border: 2px solid #666055;
+      box-shadow: 0 0 8px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,220,100,0.1);
+    }
+
+    .pipe-joint::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px; height: 10px;
+      background: radial-gradient(circle, #aaa090 0%, #555045 100%);
+      border-radius: 50%;
+      border: 1px solid #888070;
+    }
+
+    /* Steam vents */
+    .steam-vent {
+      position: absolute;
+      width: 12px;
+      height: 20px;
+      background: linear-gradient(180deg, #444035 0%, #222018 100%);
+      border: 1px solid #555045;
+      border-radius: 2px 2px 0 0;
+    }
+
+    .steam-puff {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 40px;
+      background: radial-gradient(ellipse, rgba(200,180,150,0.15) 0%, transparent 70%);
+      animation: steamPuff 3s ease-in infinite;
+    }
+
+    @keyframes steamPuff {
+      0% { transform: translateX(-50%) scaleX(1) translateY(0); opacity: 0.4; }
+      100% { transform: translateX(-50%) scaleX(2.5) translateY(-60px); opacity: 0; }
+    }
+
+    /* ===================== SPINNING GEARS ===================== */
+    .gear {
+      position: fixed;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .gear svg { display: block; }
+
+    .gear-1 { top: -40px; right: -40px; width: 180px; height: 180px; animation: spinCW 20s linear infinite; }
+    .gear-2 { top: 80px; right: 100px; width: 90px; height: 90px; animation: spinCCW 14s linear infinite; }
+    .gear-3 { bottom: -60px; left: -60px; width: 220px; height: 220px; animation: spinCCW 25s linear infinite; }
+    .gear-4 { bottom: 80px; left: 110px; width: 80px; height: 80px; animation: spinCW 10s linear infinite; }
+    .gear-5 { top: 40%; left: -50px; width: 140px; height: 140px; animation: spinCW 18s linear infinite; }
+    .gear-6 { top: 35%; right: -30px; width: 100px; height: 100px; animation: spinCCW 12s linear infinite; }
+    .gear-7 { top: -20px; left: 30%; width: 120px; height: 120px; animation: spinCW 16s linear infinite; }
+    .gear-8 { bottom: -20px; right: 25%; width: 100px; height: 100px; animation: spinCCW 14s linear infinite; }
+
+    @keyframes spinCW { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes spinCCW { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+
+    /* ===================== PRESSURE GAUGES ===================== */
+    .gauge {
+      position: fixed;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .gauge-1 { top: 20px; left: 20px; }
+    .gauge-2 { bottom: 20px; right: 20px; }
+    .gauge-3 { top: 50%; right: 20px; transform: translateY(-50%); }
+
+    /* ===================== MAIN CONTENT ===================== */
+    .main-content {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 20px 80px;
+    }
+
+    /* ===================== HEADER ===================== */
+    .vault-header {
+      text-align: center;
+      margin-bottom: 60px;
+      position: relative;
+    }
+
+    .header-plate {
+      display: inline-block;
+      background: linear-gradient(135deg, #2a2010 0%, #1a1508 50%, #2a1a08 100%);
+      border: 3px solid var(--brass-dark);
+      border-radius: 4px;
+      padding: 30px 60px;
+      position: relative;
+      box-shadow:
+        0 0 0 1px #111008,
+        0 0 30px rgba(200,146,42,0.2),
+        inset 0 0 40px rgba(0,0,0,0.6);
+    }
+
+    /* Corner bolts */
+    .header-plate::before, .header-plate::after {
+      content: '';
+      position: absolute;
+      width: 14px; height: 14px;
+      background: radial-gradient(circle, #aaa090 0%, #555045 60%, #222018 100%);
+      border-radius: 50%;
+      border: 1px solid #666055;
+      box-shadow: inset 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    .header-plate::before { top: 8px; left: 8px; }
+    .header-plate::after { top: 8px; right: 8px; }
+
+    .header-bolt-bl, .header-bolt-br {
+      position: absolute;
+      width: 14px; height: 14px;
+      background: radial-gradient(circle, #aaa090 0%, #555045 60%, #222018 100%);
+      border-radius: 50%;
+      border: 1px solid #666055;
+    }
+    .header-bolt-bl { bottom: 8px; left: 8px; }
+    .header-bolt-br { bottom: 8px; right: 8px; }
+
+    .eyebrow-text {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 6px;
+      color: var(--brass-dark);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .vault-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 900;
+      color: var(--brass-light);
+      text-shadow:
+        0 0 20px rgba(200,146,42,0.5),
+        0 0 40px rgba(200,146,42,0.2),
+        2px 2px 0 var(--brass-dark),
+        4px 4px 0 rgba(0,0,0,0.5);
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+
+    .vault-subtitle {
+      font-family: 'Crimson Text', serif;
+      font-style: italic;
+      font-size: 1rem;
+      color: var(--brass-dark);
+      letter-spacing: 2px;
+    }
+
+    /* Decorative divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0 0;
+    }
+
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--brass-dark), transparent);
+    }
+
+    .divider-gear {
+      color: var(--brass-dark);
+      font-size: 1.2rem;
+      animation: spinCW 8s linear infinite;
+      display: inline-block;
+    }
+
+    /* ===================== PORTAL GRID ===================== */
+    .portals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 40px;
+      max-width: 1000px;
+      width: 100%;
+      margin-bottom: 60px;
+    }
+
+    /* ===================== PORTAL CARD ===================== */
+    .portal {
+      position: relative;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .portal:hover { transform: translateY(-4px); }
+
+    .portal-frame {
+      background: linear-gradient(145deg, #1a1508 0%, #0f0d08 50%, #1a1205 100%);
+      border: 2px solid var(--brass-dark);
+      border-radius: 8px;
+      padding: 0;
+      overflow: hidden;
+      position: relative;
+      box-shadow:
+        0 0 0 1px #080604,
+        0 0 30px rgba(0,0,0,0.8),
+        inset 0 0 20px rgba(0,0,0,0.5);
+      transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    .portal:hover .portal-frame {
+      border-color: var(--brass);
+      box-shadow:
+        0 0 0 1px #080604,
+        0 0 40px rgba(200,146,42,0.3),
+        0 0 80px rgba(200,146,42,0.1),
+        inset 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    /* Porthole window */
+    .porthole {
+      width: 160px;
+      height: 160px;
+      margin: 30px auto 20px;
+      position: relative;
+    }
+
+    .porthole-outer {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #666055 0%, #333025 50%, #555045 100%);
+      padding: 8px;
+      box-shadow:
+        0 0 0 3px #111008,
+        0 0 20px rgba(0,0,0,0.8),
+        inset 0 4px 8px rgba(0,0,0,0.6);
+      position: relative;
+    }
+
+    /* Porthole bolts around the ring */
+    .porthole-outer::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 2%, #aaa090 2px, transparent 3px),
+        radial-gradient(circle at 50% 98%, #aaa090 2px, transparent 3px),
+        radial-gradient(circle at 2% 50%, #aaa090 2px, transparent 3px),
+        radial-gradient(circle at 98% 50%, #aaa090 2px, transparent 3px),
+        radial-gradient(circle at 15% 15%, #aaa090 2px, transparent 3px),
+        radial-gradient(circle at 85% 15%, #aaa090 2px, transparent 3px),
+        radial-gradient(circle at 15% 85%, #aaa090 2px, transparent 3px),
+        radial-gradient(circle at 85% 85%, #aaa090 2px, transparent 3px);
+    }
+
+    .porthole-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      overflow: hidden;
+      background: #080604;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .porthole-icon {
+      font-size: 3.5rem;
+      z-index: 2;
+      filter: drop-shadow(0 0 12px rgba(200,146,42,0.6));
+      transition: transform 0.3s ease, filter 0.3s ease;
+    }
+
+    .portal:hover .porthole-icon {
+      transform: scale(1.15);
+      filter: drop-shadow(0 0 20px rgba(200,146,42,0.9));
+    }
+
+    /* Porthole glow effect */
+    .porthole-glow {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(200,146,42,0.0) 0%, transparent 70%);
+      transition: background 0.3s ease;
+    }
+
+    .portal:hover .porthole-glow {
+      background: radial-gradient(circle, rgba(200,146,42,0.15) 0%, transparent 70%);
+    }
+
+    /* Portal info */
+    .portal-info {
+      padding: 0 24px 28px;
+      text-align: center;
+    }
+
+    .portal-status {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      padding: 3px 10px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .status-active {
+      color: #60cc60;
+      background: rgba(60,120,60,0.2);
+      border: 1px solid rgba(60,120,60,0.4);
+    }
+
+    .status-wip {
+      color: var(--brass);
+      background: rgba(200,146,42,0.1);
+      border: 1px solid rgba(200,146,42,0.3);
+    }
+
+    .status-locked {
+      color: #cc6060;
+      background: rgba(120,40,40,0.2);
+      border: 1px solid rgba(120,40,40,0.3);
+    }
+
+    .portal-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--brass-light);
+      margin-bottom: 8px;
+      text-shadow: 0 0 10px rgba(200,146,42,0.3);
+    }
+
+    .portal-desc {
+      font-family: 'Crimson Text', serif;
+      font-style: italic;
+      font-size: 0.9rem;
+      color: #8a7860;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .portal-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    .tag {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 1px;
+      padding: 2px 8px;
+      border: 1px solid var(--brass-dark);
+      color: var(--brass-dark);
+      border-radius: 2px;
+      text-transform: uppercase;
+    }
+
+    /* Enter button */
+    .portal-enter {
+      display: block;
+      margin: 16px 24px 0;
+      padding: 10px;
+      background: linear-gradient(135deg, #2a1e08 0%, #1a1205 100%);
+      border: 1px solid var(--brass-dark);
+      border-radius: 4px;
+      text-align: center;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 3px;
+      color: var(--brass-dark);
+      text-transform: uppercase;
+      transition: all 0.2s ease;
+      margin-bottom: 24px;
+    }
+
+    .portal:hover .portal-enter {
+      background: linear-gradient(135deg, #3a2e18 0%, #2a2010 100%);
+      border-color: var(--brass);
+      color: var(--brass-light);
+      box-shadow: 0 0 15px rgba(200,146,42,0.2);
+    }
+
+    /* Corner decorations on cards */
+    .corner-dec {
+      position: absolute;
+      width: 20px; height: 20px;
+      pointer-events: none;
+    }
+    .corner-dec::before, .corner-dec::after {
+      content: '';
+      position: absolute;
+      background: var(--brass-dark);
+    }
+    .corner-dec::before { width: 100%; height: 2px; top: 0; left: 0; }
+    .corner-dec::after { width: 2px; height: 100%; top: 0; left: 0; }
+
+    .corner-tl { top: 6px; left: 6px; }
+    .corner-tr { top: 6px; right: 6px; transform: scaleX(-1); }
+    .corner-bl { bottom: 6px; left: 6px; transform: scaleY(-1); }
+    .corner-br { bottom: 6px; right: 6px; transform: scale(-1); }
+
+    /* ===================== TICKER TAPE ===================== */
+    .ticker-wrap {
+      position: fixed;
+      bottom: 0;
+      left: 0; right: 0;
+      z-index: 20;
+      background: linear-gradient(180deg, #0a0805 0%, #141008 100%);
+      border-top: 2px solid var(--brass-dark);
+      padding: 6px 0;
+      overflow: hidden;
+    }
+
+    .ticker-inner {
+      display: flex;
+      white-space: nowrap;
+      animation: ticker 30s linear infinite;
+    }
+
+    .ticker-text {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      color: var(--brass-dark);
+      padding-right: 80px;
+    }
+
+    .ticker-sep {
+      color: var(--brass);
+      padding-right: 80px;
+    }
+
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    /* ===================== BACK LINK ===================== */
+    .back-link {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 2px;
+      color: var(--brass-dark);
+      text-decoration: none;
+      text-transform: uppercase;
+      padding: 8px 20px;
+      border: 1px solid var(--brass-dark);
+      border-radius: 3px;
+      transition: all 0.2s;
+      margin-top: 20px;
+    }
+
+    .back-link:hover {
+      color: var(--brass);
+      border-color: var(--brass);
+      background: rgba(200,146,42,0.05);
+    }
+
+    /* ===================== FLOATING PARTICLES ===================== */
+    .particle {
+      position: fixed;
+      width: 2px; height: 2px;
+      background: var(--brass);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+      animation: floatUp linear infinite;
+      opacity: 0;
+    }
+
+    @keyframes floatUp {
+      0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+      10% { opacity: 0.6; }
+      90% { opacity: 0.3; }
+      100% { transform: translateY(-20px) translateX(30px); opacity: 0; }
+    }
+
+    /* ===================== RESPONSIVE ===================== */
+    @media (max-width: 700px) {
+      .portals-grid { grid-template-columns: 1fr; gap: 24px; }
+      .vault-title { font-size: 1.6rem; }
+      .header-plate { padding: 20px 30px; }
+      .gear-1, .gear-3, .gear-5, .gear-6, .gear-7, .gear-8 { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background texture -->
+  <div class="bg-layer"></div>
+
+  <!-- Pipes -->
+  <div class="pipes">
+    <div class="pipe-h" style="top:60px; left:0; right:0;"></div>
+    <div class="pipe-h" style="bottom:50px; left:0; right:0;"></div>
+    <div class="pipe-v" style="left:60px; top:0; bottom:0;"></div>
+    <div class="pipe-v" style="right:60px; top:0; bottom:0;"></div>
+    <div class="pipe-joint" style="top:51px; left:51px;"></div>
+    <div class="pipe-joint" style="top:51px; right:51px;"></div>
+    <div class="pipe-joint" style="bottom:41px; left:51px;"></div>
+    <div class="pipe-joint" style="bottom:41px; right:51px;"></div>
+    <!-- Steam vents -->
+    <div class="steam-vent" style="top:42px; left:200px;">
+      <div class="steam-puff"></div>
+    </div>
+    <div class="steam-vent" style="top:42px; left:500px;">
+      <div class="steam-puff" style="animation-delay:1.2s;"></div>
+    </div>
+    <div class="steam-vent" style="top:42px; right:200px;">
+      <div class="steam-puff" style="animation-delay:2.4s;"></div>
+    </div>
+  </div>
+
+  <!-- Spinning gears (SVG) -->
+  <div class="gear gear-1">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g opacity="0.5">
+        <!-- Gear teeth -->
+        <rect x="44" y="0" width="12" height="18" rx="2" fill="#555045"/>
+        <rect x="44" y="82" width="12" height="18" rx="2" fill="#555045"/>
+        <rect x="0" y="44" width="18" height="12" rx="2" fill="#555045"/>
+        <rect x="82" y="44" width="18" height="12" rx="2" fill="#555045"/>
+        <rect x="14" y="14" width="12" height="18" rx="2" fill="#555045" transform="rotate(45 20 20)"/>
+        <rect x="66" y="14" width="12" height="18" rx="2" fill="#555045" transform="rotate(-45 80 20)"/>
+        <rect x="14" y="66" width="12" height="18" rx="2" fill="#555045" transform="rotate(-45 20 80)"/>
+        <rect x="66" y="66" width="12" height="18" rx="2" fill="#555045" transform="rotate(45 80 80)"/>
+        <circle cx="50" cy="50" r="36" fill="#2a2820" stroke="#555045" stroke-width="3"/>
+        <circle cx="50" cy="50" r="24" fill="#1a1810" stroke="#444035" stroke-width="2"/>
+        <circle cx="50" cy="50" r="10" fill="#333025" stroke="#666055" stroke-width="2"/>
+        <circle cx="50" cy="50" r="4" fill="#888070"/>
+        <!-- Spokes -->
+        <line x1="50" y1="26" x2="50" y2="38" stroke="#444035" stroke-width="2"/>
+        <line x1="50" y1="62" x2="50" y2="74" stroke="#444035" stroke-width="2"/>
+        <line x1="26" y1="50" x2="38" y2="50" stroke="#444035" stroke-width="2"/>
+        <line x1="62" y1="50" x2="74" y2="50" stroke="#444035" stroke-width="2"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="gear gear-2">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g opacity="0.4">
+        <rect x="44" y="0" width="12" height="16" rx="2" fill="#555045"/>
+        <rect x="44" y="84" width="12" height="16" rx="2" fill="#555045"/>
+        <rect x="0" y="44" width="16" height="12" rx="2" fill="#555045"/>
+        <rect x="84" y="44" width="16" height="12" rx="2" fill="#555045"/>
+        <rect x="12" y="12" width="12" height="16" rx="2" fill="#555045" transform="rotate(45 18 18)"/>
+        <rect x="68" y="12" width="12" height="16" rx="2" fill="#555045" transform="rotate(-45 82 18)"/>
+        <circle cx="50" cy="50" r="34" fill="#2a2820" stroke="#555045" stroke-width="3"/>
+        <circle cx="50" cy="50" r="20" fill="#1a1810" stroke="#444035" stroke-width="2"/>
+        <circle cx="50" cy="50" r="8" fill="#888070" stroke="#666055" stroke-width="2"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="gear gear-3">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g opacity="0.45">
+        <rect x="44" y="0" width="12" height="18" rx="2" fill="#555045"/>
+        <rect x="44" y="82" width="12" height="18" rx="2" fill="#555045"/>
+        <rect x="0" y="44" width="18" height="12" rx="2" fill="#555045"/>
+        <rect x="82" y="44" width="18" height="12" rx="2" fill="#555045"/>
+        <rect x="14" y="14" width="12" height="18" rx="2" fill="#555045" transform="rotate(45 20 20)"/>
+        <rect x="66" y="14" width="12" height="18" rx="2" fill="#555045" transform="rotate(-45 80 20)"/>
+        <rect x="14" y="66" width="12" height="18" rx="2" fill="#555045" transform="rotate(-45 20 80)"/>
+        <rect x="66" y="66" width="12" height="18" rx="2" fill="#555045" transform="rotate(45 80 80)"/>
+        <circle cx="50" cy="50" r="36" fill="#2a2820" stroke="#555045" stroke-width="3"/>
+        <circle cx="50" cy="50" r="24" fill="#1a1810" stroke="#444035" stroke-width="2"/>
+        <circle cx="50" cy="50" r="10" fill="#333025" stroke="#666055" stroke-width="2"/>
+        <circle cx="50" cy="50" r="4" fill="#888070"/>
+        <line x1="50" y1="26" x2="50" y2="38" stroke="#444035" stroke-width="2"/>
+        <line x1="50" y1="62" x2="50" y2="74" stroke="#444035" stroke-width="2"/>
+        <line x1="26" y1="50" x2="38" y2="50" stroke="#444035" stroke-width="2"/>
+        <line x1="62" y1="50" x2="74" y2="50" stroke="#444035" stroke-width="2"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="gear gear-4">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g opacity="0.35">
+        <rect x="44" y="0" width="12" height="16" rx="2" fill="#555045"/>
+        <rect x="44" y="84" width="12" height="16" rx="2" fill="#555045"/>
+        <rect x="0" y="44" width="16" height="12" rx="2" fill="#555045"/>
+        <rect x="84" y="44" width="16" height="12" rx="2" fill="#555045"/>
+        <circle cx="50" cy="50" r="34" fill="#2a2820" stroke="#555045" stroke-width="3"/>
+        <circle cx="50" cy="50" r="18" fill="#1a1810" stroke="#444035" stroke-width="2"/>
+        <circle cx="50" cy="50" r="7" fill="#888070" stroke="#666055" stroke-width="2"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="gear gear-5">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g opacity="0.4">
+        <rect x="44" y="0" width="12" height="18" rx="2" fill="#555045"/>
+        <rect x="44" y="82" width="12" height="18" rx="2" fill="#555045"/>
+        <rect x="0" y="44" width="18" height="12" rx="2" fill="#555045"/>
+        <rect x="82" y="44" width="18" height="12" rx="2" fill="#555045"/>
+        <rect x="14" y="14" width="12" height="18" rx="2" fill="#555045" transform="rotate(45 20 20)"/>
+        <rect x="66" y="14" width="12" height="18" rx="2" fill="#555045" transform="rotate(-45 80 20)"/>
+        <circle cx="50" cy="50" r="36" fill="#2a2820" stroke="#555045" stroke-width="3"/>
+        <circle cx="50" cy="50" r="22" fill="#1a1810" stroke="#444035" stroke-width="2"/>
+        <circle cx="50" cy="50" r="9" fill="#333025" stroke="#666055" stroke-width="2"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="gear gear-6">
+    <svg viewBox="0 0 100 100" fill="none">
+      <g opacity="0.4">
+        <rect x="44" y="0" width="12" height="16" rx="2" fill="#555045"/>
+        <rect x="44" y="84" width="12" height="16" rx="2" fill="#555045"/>
+        <rect x="0" y="44" width="16" height="12" rx="2" fill="#555045"/>
+        <rect x="84" y="44" width="16" height="12" rx="2" fill="#555045"/>
+        <circle cx="50" cy="50" r="34" fill="#2a2820" stroke="#555045" stroke-width="3"/>
+        <circle cx="50" cy="50" r="20" fill="#1a1810" stroke="#444035" stroke-width="2"/>
+        <circle cx="50" cy="50" r="8" fill="#888070" stroke="#666055" stroke-width="2"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="gear gear-7">
+    <svg viewBox="0 0 100 100" fill="none">
+      <g opacity="0.3">
+        <rect x="44" y="0" width="12" height="18" rx="2" fill="#555045"/>
+        <rect x="44" y="82" width="12" height="18" rx="2" fill="#555045"/>
+        <rect x="0" y="44" width="18" height="12" rx="2" fill="#555045"/>
+        <rect x="82" y="44" width="18" height="12" rx="2" fill="#555045"/>
+        <rect x="14" y="14" width="12" height="18" rx="2" fill="#555045" transform="rotate(45 20 20)"/>
+        <rect x="66" y="14" width="12" height="18" rx="2" fill="#555045" transform="rotate(-45 80 20)"/>
+        <circle cx="50" cy="50" r="36" fill="#2a2820" stroke="#555045" stroke-width="3"/>
+        <circle cx="50" cy="50" r="22" fill="#1a1810" stroke="#444035" stroke-width="2"/>
+        <circle cx="50" cy="50" r="9" fill="#888070"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="gear gear-8">
+    <svg viewBox="0 0 100 100" fill="none">
+      <g opacity="0.35">
+        <rect x="44" y="0" width="12" height="16" rx="2" fill="#555045"/>
+        <rect x="44" y="84" width="12" height="16" rx="2" fill="#555045"/>
+        <rect x="0" y="44" width="16" height="12" rx="2" fill="#555045"/>
+        <rect x="84" y="44" width="16" height="12" rx="2" fill="#555045"/>
+        <circle cx="50" cy="50" r="34" fill="#2a2820" stroke="#555045" stroke-width="3"/>
+        <circle cx="50" cy="50" r="20" fill="#1a1810" stroke="#444035" stroke-width="2"/>
+        <circle cx="50" cy="50" r="8" fill="#888070" stroke="#666055" stroke-width="2"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Pressure Gauges -->
+  <div class="gauge gauge-1">
+    <svg width="80" height="80" viewBox="0 0 80 80" opacity="0.5">
+      <circle cx="40" cy="40" r="36" fill="#1a1810" stroke="#555045" stroke-width="3"/>
+      <circle cx="40" cy="40" r="30" fill="#0f0d08" stroke="#333025" stroke-width="1"/>
+      <text x="40" y="28" text-anchor="middle" fill="#555045" font-family="Share Tech Mono" font-size="7">PRESSURE</text>
+      <text x="40" y="56" text-anchor="middle" fill="#c8922a" font-family="Share Tech Mono" font-size="10" font-weight="bold">72</text>
+      <text x="40" y="64" text-anchor="middle" fill="#444035" font-family="Share Tech Mono" font-size="6">PSI</text>
+      <line x1="40" y1="40" x2="55" y2="28" stroke="#c8922a" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="40" cy="40" r="3" fill="#888070"/>
+    </svg>
+  </div>
+
+  <div class="gauge gauge-2">
+    <svg width="70" height="70" viewBox="0 0 80 80" opacity="0.4">
+      <circle cx="40" cy="40" r="36" fill="#1a1810" stroke="#555045" stroke-width="3"/>
+      <circle cx="40" cy="40" r="30" fill="#0f0d08" stroke="#333025" stroke-width="1"/>
+      <text x="40" y="28" text-anchor="middle" fill="#555045" font-family="Share Tech Mono" font-size="7">TEMP</text>
+      <text x="40" y="56" text-anchor="middle" fill="#c8922a" font-family="Share Tech Mono" font-size="10" font-weight="bold">340</text>
+      <text x="40" y="64" text-anchor="middle" fill="#444035" font-family="Share Tech Mono" font-size="6">°F</text>
+      <line x1="40" y1="40" x2="28" y2="26" stroke="#c8922a" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="40" cy="40" r="3" fill="#888070"/>
+    </svg>
+  </div>
+
+  <!-- Floating particles -->
+  <div class="particle" style="left:10%; animation-duration:8s; animation-delay:0s; width:3px; height:3px;"></div>
+  <div class="particle" style="left:25%; animation-duration:12s; animation-delay:2s;"></div>
+  <div class="particle" style="left:40%; animation-duration:9s; animation-delay:4s; width:3px; height:3px;"></div>
+  <div class="particle" style="left:60%; animation-duration:11s; animation-delay:1s;"></div>
+  <div class="particle" style="left:75%; animation-duration:7s; animation-delay:3s; width:3px; height:3px;"></div>
+  <div class="particle" style="left:90%; animation-duration:13s; animation-delay:5s;"></div>
+
+  <!-- Main content -->
+  <div class="main-content">
+
+    <div class="vault-header">
+      <div class="header-plate">
+        <div class="header-bolt-bl"></div>
+        <div class="header-bolt-br"></div>
+        <div class="eyebrow-text">⚙ Classified Workshop ⚙</div>
+        <div class="vault-title">The Vault</div>
+        <div class="vault-subtitle">— Works, Experiments & Contraptions —</div>
+        <div class="divider">
+          <div class="divider-line"></div>
+          <span class="divider-gear">⚙</span>
+          <div class="divider-line"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="portals-grid">
+
+      <!-- Portal 1: ESP32 Soundboard -->
+      <a class="portal" href="esp32-soundboard.html">
+        <div class="portal-frame">
+          <div class="corner-dec corner-tl"></div>
+          <div class="corner-dec corner-tr"></div>
+          <div class="corner-dec corner-bl"></div>
+          <div class="corner-dec corner-br"></div>
+          <div class="porthole">
+            <div class="porthole-outer">
+              <div class="porthole-inner">
+                <div class="porthole-glow"></div>
+                <span class="porthole-icon">🔊</span>
+              </div>
+            </div>
+          </div>
+          <div class="portal-info">
+            <div class="portal-status status-active">● Operational</div>
+            <div class="portal-title">ESP32 Soundboard</div>
+            <div class="portal-desc">A WiFi-enabled soundboard built from an ESP32, DFPlayer Mini, arcade buttons & an 18650 battery. Wiring diagrams, firmware & web UI.</div>
+            <div class="portal-tags">
+              <span class="tag">ESP32</span>
+              <span class="tag">Arduino</span>
+              <span class="tag">DFPlayer</span>
+              <span class="tag">WiFi</span>
+            </div>
+          </div>
+          <div class="portal-enter">[ Enter Workshop ]</div>
+        </div>
+      </a>
+
+      <!-- Portal 2: Pi IDS -->
+      <a class="portal" href="pi-ids.html">
+        <div class="portal-frame">
+          <div class="corner-dec corner-tl"></div>
+          <div class="corner-dec corner-tr"></div>
+          <div class="corner-dec corner-bl"></div>
+          <div class="corner-dec corner-br"></div>
+          <div class="porthole">
+            <div class="porthole-outer">
+              <div class="porthole-inner">
+                <div class="porthole-glow"></div>
+                <span class="porthole-icon">🍓</span>
+              </div>
+            </div>
+          </div>
+          <div class="portal-info">
+            <div class="portal-status status-wip">⚙ In Progress</div>
+            <div class="portal-title">Raspberry Pi IDS</div>
+            <div class="portal-desc">A home network intrusion detection system running on a Pi 4. Snort, Suricata, and custom alert rules watching what crawls onto the network.</div>
+            <div class="portal-tags">
+              <span class="tag">Pi 4</span>
+              <span class="tag">Snort</span>
+              <span class="tag">Linux</span>
+              <span class="tag">Security</span>
+            </div>
+          </div>
+          <div class="portal-enter">[ View Build Log ]</div>
+        </div>
+      </a>
+
+      <!-- Portal 3: Drone -->
+      <a class="portal" href="drone-build.html">
+        <div class="portal-frame">
+          <div class="corner-dec corner-tl"></div>
+          <div class="corner-dec corner-tr"></div>
+          <div class="corner-dec corner-bl"></div>
+          <div class="corner-dec corner-br"></div>
+          <div class="porthole">
+            <div class="porthole-outer">
+              <div class="porthole-inner">
+                <div class="porthole-glow"></div>
+                <span class="porthole-icon">🚁</span>
+              </div>
+            </div>
+          </div>
+          <div class="portal-info">
+            <div class="portal-status status-wip">⚙ In Progress</div>
+            <div class="portal-title">Drone Build Log</div>
+            <div class="portal-desc">Custom drone builds from the ground up. Frame selection, flight controller flashing, ESC calibration, camera mounts & FPV. The whole journey.</div>
+            <div class="portal-tags">
+              <span class="tag">FPV</span>
+              <span class="tag">Betaflight</span>
+              <span class="tag">Hardware</span>
+              <span class="tag">Build</span>
+            </div>
+          </div>
+          <div class="portal-enter">[ View Build Log ]</div>
+        </div>
+      </a>
+
+    </div>
+
+    <a href="../index.html" class="back-link">⚙ Return to EAV Glass ⚙</a>
+
+  </div>
+
+  <!-- Ticker tape -->
+  <div class="ticker-wrap">
+    <div class="ticker-inner">
+      <span class="ticker-text">VAULT STATUS: NOMINAL</span>
+      <span class="ticker-sep">⚙</span>
+      <span class="ticker-text">BOILER PRESSURE: 72 PSI</span>
+      <span class="ticker-sep">⚙</span>
+      <span class="ticker-text">ACTIVE PROJECTS: 3</span>
+      <span class="ticker-sep">⚙</span>
+      <span class="ticker-text">STEAM OUTPUT: OPTIMAL</span>
+      <span class="ticker-sep">⚙</span>
+      <span class="ticker-text">ALL GEARS TURNING</span>
+      <span class="ticker-sep">⚙</span>
+      <span class="ticker-text">UNAUTHORIZED ACCESS WILL BE MET WITH EXTREME PREJUDICE</span>
+      <span class="ticker-sep">⚙</span>
+      <span class="ticker-text">VAULT STATUS: NOMINAL</span>
+      <span class="ticker-sep">⚙</span>
+      <span class="ticker-text">BOILER PRESSURE: 72 PSI</span>
+      <span class="ticker-sep">⚙</span>
+      <span class="ticker-text">ACTIVE PROJECTS: 3</span>
+      <span class="ticker-sep">⚙</span>
+      <span class="ticker-text">STEAM OUTPUT: OPTIMAL</span>
+      <span class="ticker-sep">⚙</span>
+      <span class="ticker-text">ALL GEARS TURNING</span>
+      <span class="ticker-sep">⚙</span>
+      <span class="ticker-text">UNAUTHORIZED ACCESS WILL BE MET WITH EXTREME PREJUDICE</span>
+      <span class="ticker-sep">⚙</span>
+    </div>
+  </div>
+
+</body>
+</html>
