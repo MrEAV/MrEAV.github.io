@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESP32 Soundboard — Wiring & Web App Preview</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --panel: #111827;
+    --border: #1e2d45;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --green: #00ff88;
+    --yellow: #ffd60a;
+    --text: #c8d8e8;
+    --dim: #4a6080;
+    --wire-red: #ff3b3b;
+    --wire-black: #333;
+    --wire-blue: #4488ff;
+    --wire-green: #00cc66;
+    --wire-yellow: #ffd60a;
+    --wire-orange: #ff8c00;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 50px;
+  }
+
+  header h1 {
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, var(--accent), var(--green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  header p {
+    color: var(--dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    margin-top: 8px;
+    letter-spacing: 2px;
+  }
+
+  /* Tab navigation */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+
+  .tab {
+    padding: 10px 24px;
+    cursor: pointer;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    color: var(--dim);
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    transition: all 0.2s;
+    background: transparent;
+    text-transform: uppercase;
+  }
+
+  .tab:hover { color: var(--accent); }
+
+  .tab.active {
+    color: var(--accent);
+    border-color: var(--border);
+    background: var(--panel);
+    border-bottom: 1px solid var(--panel);
+    margin-bottom: -1px;
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Wiring diagram */
+  .wiring-diagram {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+  }
+
+  .diagram-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  /* SVG Wiring Diagram */
+  .diagram-svg {
+    width: 100%;
+    background: #080c14;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow: visible;
+  }
+
+  /* Wire legend */
+  .wire-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .wire-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.78rem;
+  }
+
+  .wire-swatch {
+    width: 30px;
+    height: 3px;
+    border-radius: 2px;
+  }
+
+  /* Pin table */
+  .pin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.82rem;
+    margin-top: 20px;
+  }
+
+  .pin-table th {
+    text-align: left;
+    padding: 10px 14px;
+    color: var(--accent);
+    font-size: 0.72rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pin-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(30,45,69,0.5);
+    color: var(--text);
+  }
+
+  .pin-table tr:hover td { background: rgba(0,212,255,0.03); }
+
+  .pin-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+
+  .badge-power { background: rgba(255,59,59,0.15); color: #ff6b6b; border: 1px solid rgba(255,59,59,0.3); }
+  .badge-gnd { background: rgba(80,80,80,0.3); color: #999; border: 1px solid rgba(100,100,100,0.3); }
+  .badge-data { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+  .badge-audio { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.2); }
+  .badge-btn { background: rgba(255,214,10,0.1); color: var(--yellow); border: 1px solid rgba(255,214,10,0.2); }
+
+  /* Web app preview */
+  .webapp-frame {
+    background: #f0f2f5;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .webapp-bar {
+    background: #1a1a2e;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .webapp-dots { display: flex; gap: 6px; }
+  .webapp-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  .webapp-url {
+    background: rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.78rem;
+    color: #88aacc;
+    flex: 1;
+    text-align: center;
+  }
+
+  /* Actual web app UI */
+  .app-ui {
+    background: #0f1923;
+    padding: 0;
+    min-height: 600px;
+  }
+
+  .app-header {
+    background: #0a1520;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #1a2a3a;
+  }
+
+  .app-logo {
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #00d4ff;
+    letter-spacing: -0.5px;
+  }
+
+  .app-logo span { color: #00ff88; }
+
+  .app-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    color: #00ff88;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    background: #00ff88;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .app-body {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: 550px;
+  }
+
+  .app-sidebar {
+    background: #0a1520;
+    border-right: 1px solid #1a2a3a;
+    padding: 20px 0;
+  }
+
+  .sidebar-section {
+    padding: 0 16px;
+    margin-bottom: 24px;
+  }
+
+  .sidebar-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: #2a4a6a;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    padding: 0 4px;
+  }
+
+  .sidebar-item {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    color: #6a8aa0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+
+  .sidebar-item:hover { background: rgba(0,212,255,0.05); color: #00d4ff; }
+  .sidebar-item.active { background: rgba(0,212,255,0.1); color: #00d4ff; border-left: 2px solid #00d4ff; }
+
+  .sidebar-icon { font-size: 0.9rem; width: 18px; text-align: center; }
+
+  .app-main {
+    padding: 24px;
+    overflow-y: auto;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #c8d8e8;
+  }
+
+  .btn {
+    padding: 7px 16px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-family: 'Share Tech Mono', monospace;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-primary { background: #00d4ff; color: #0a1520; font-weight: 700; }
+  .btn-primary:hover { background: #33ddff; }
+  .btn-ghost { background: transparent; color: #00d4ff; border: 1px solid #1a3a5a; }
+  .btn-ghost:hover { background: rgba(0,212,255,0.05); }
+  .btn-danger { background: transparent; color: #ff6b6b; border: 1px solid rgba(255,107,107,0.3); }
+
+  /* Button grid in app */
+  .button-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .sound-button {
+    background: #0a1520;
+    border: 1px solid #1a2a3a;
+    border-radius: 10px;
+    padding: 14px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .sound-button:hover { border-color: #00d4ff; background: rgba(0,212,255,0.05); }
+  .sound-button.assigned { border-color: rgba(0,255,136,0.3); }
+
+  .btn-color {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    margin: 0 auto 8px;
+    border: 2px solid rgba(255,255,255,0.1);
+  }
+
+  .btn-number {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: #2a4a6a;
+    margin-bottom: 4px;
+  }
+
+  .btn-label {
+    font-size: 0.7rem;
+    color: #8aааc0;
+    line-height: 1.3;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7a9ab0;
+  }
+
+  .btn-file {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: #00ff88;
+    margin-top: 4px;
+    opacity: 0.7;
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed #1a3a5a;
+    border-radius: 10px;
+    padding: 28px;
+    text-align: center;
+    transition: all 0.2s;
+    background: rgba(0,212,255,0.01);
+    margin-bottom: 20px;
+  }
+
+  .upload-zone:hover { border-color: #00d4ff; background: rgba(0,212,255,0.04); }
+
+  .upload-icon { font-size: 2rem; margin-bottom: 8px; }
+
+  .upload-text {
+    font-size: 0.85rem;
+    color: #4a6a80;
+    margin-bottom: 4px;
+  }
+
+  .upload-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: #2a4a5a;
+  }
+
+  /* File list */
+  .file-list { margin-bottom: 20px; }
+
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #0a1520;
+    border: 1px solid #1a2a3a;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    font-size: 0.82rem;
+  }
+
+  .file-icon { color: #ff6b35; font-size: 0.9rem; }
+  .file-name { flex: 1; font-family: 'Share Tech Mono', monospace; color: #8ab0c8; font-size: 0.78rem; }
+  .file-size { color: #2a4a6a; font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; }
+  .file-assign { color: #00d4ff; font-size: 0.75rem; cursor: pointer; }
+
+  /* Volume control */
+  .volume-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #0a1520;
+    border: 1px solid #1a2a3a;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+  }
+
+  .volume-label { font-size: 0.82rem; color: #6a8aa0; min-width: 60px; }
+
+  .volume-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(to right, #00d4ff 70%, #1a2a3a 70%);
+    outline: none;
+  }
+
+  .volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #00d4ff;
+    cursor: pointer;
+  }
+
+  .volume-val {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.78rem;
+    color: #00d4ff;
+    min-width: 28px;
+    text-align: right;
+  }
+
+  /* Bank selector */
+  .bank-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .bank-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    border: 1px solid #1a2a3a;
+    background: transparent;
+    color: #4a6a80;
+    transition: all 0.15s;
+  }
+
+  .bank-btn.active { background: rgba(0,212,255,0.1); color: #00d4ff; border-color: rgba(0,212,255,0.3); }
+  .bank-btn:hover { color: #00d4ff; }
+
+  /* Code block */
+  .code-block {
+    background: #080c14;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.7;
+    overflow-x: auto;
+    margin-bottom: 20px;
+  }
+
+  .code-comment { color: #2a5a3a; }
+  .code-keyword { color: #ff6b35; }
+  .code-string { color: #00ff88; }
+  .code-number { color: #ffd60a; }
+  .code-func { color: #00d4ff; }
+  .code-var { color: var(--text); }
+
+  .note-box {
+    background: rgba(255,107,53,0.08);
+    border: 1px solid rgba(255,107,53,0.2);
+    border-left: 3px solid var(--accent2);
+    border-radius: 6px;
+    padding: 14px 18px;
+    font-size: 0.82rem;
+    color: #c8a898;
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .note-box strong { color: var(--accent2); }
+
+  .success-box {
+    background: rgba(0,255,136,0.05);
+    border: 1px solid rgba(0,255,136,0.2);
+    border-left: 3px solid var(--green);
+    border-radius: 6px;
+    padding: 14px 18px;
+    font-size: 0.82rem;
+    color: #98c8a8;
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .success-box strong { color: var(--green); }
+
+  h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    margin-top: 24px;
+    text-transform: uppercase;
+  }
+
+  h3:first-child { margin-top: 0; }
+
+  p { font-size: 0.85rem; color: var(--text); line-height: 1.7; margin-bottom: 12px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  @media (max-width: 700px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .app-body { grid-template-columns: 1fr; }
+    .app-sidebar { display: none; }
+    .button-grid { grid-template-columns: repeat(3, 1fr); }
+    header h1 { font-size: 1.8rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>ESP32 Soundboard</h1>
+    <p>// WIRING REFERENCE + WEB INTERFACE PREVIEW //</p>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('wiring')">Wiring Diagram</div>
+    <div class="tab" onclick="showTab('pins')">Pin Reference</div>
+    <div class="tab" onclick="showTab('webapp')">Web App Preview</div>
+    <div class="tab" onclick="showTab('code')">Starter Code</div>
+  </div>
+
+  <!-- WIRING TAB -->
+  <div class="tab-content active" id="tab-wiring">
+    <div class="wiring-diagram">
+      <div class="diagram-title">// CIRCUIT DIAGRAM — ESP32 WROOM-32U + DFPLAYER MINI</div>
+
+      <svg class="diagram-svg" viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <marker id="arrowhead" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto">
+            <polygon points="0 0, 6 2, 0 4" fill="#00d4ff" opacity="0.6"/>
+          </marker>
+        </defs>
+
+        <!-- Background -->
+        <rect width="900" height="520" fill="#080c14" rx="8"/>
+        <line x1="0" y1="40" x2="900" y2="40" stroke="#0a1824" stroke-width="20"/>
+
+        <!-- Grid lines subtle -->
+        <g stroke="#0d1520" stroke-width="1">
+          <line x1="0" y1="100" x2="900" y2="100"/>
+          <line x1="0" y1="200" x2="900" y2="200"/>
+          <line x1="0" y1="300" x2="900" y2="300"/>
+          <line x1="0" y1="400" x2="900" y2="400"/>
+          <line x1="200" y1="0" x2="200" y2="520"/>
+          <line x1="450" y1="0" x2="450" y2="520"/>
+          <line x1="700" y1="0" x2="700" y2="520"/>
+        </g>
+
+        <!-- ===== ESP32 CHIP ===== -->
+        <rect x="320" y="160" width="160" height="200" rx="6" fill="#111827" stroke="#1e3a5a" stroke-width="2"/>
+        <rect x="320" y="160" width="160" height="28" rx="6" fill="#1a2840"/>
+        <text x="400" y="178" text-anchor="middle" fill="#00d4ff" font-family="Share Tech Mono" font-size="11" font-weight="bold">ESP32 WROOM-32U</text>
+
+        <!-- ESP32 pins left side labels -->
+        <text x="316" y="215" text-anchor="end" fill="#4a7a9a" font-family="Share Tech Mono" font-size="9">3.3V</text>
+        <text x="316" y="235" text-anchor="end" fill="#4a7a9a" font-family="Share Tech Mono" font-size="9">GND</text>
+        <text x="316" y="255" text-anchor="end" fill="#4a7a9a" font-family="Share Tech Mono" font-size="9">GPIO16 (RX2)</text>
+        <text x="316" y="275" text-anchor="end" fill="#4a7a9a" font-family="Share Tech Mono" font-size="9">GPIO17 (TX2)</text>
+        <text x="316" y="295" text-anchor="end" fill="#4a7a9a" font-family="Share Tech Mono" font-size="9">GPIO18</text>
+        <text x="316" y="315" text-anchor="end" fill="#4a7a9a" font-family="Share Tech Mono" font-size="9">GPIO19</text>
+        <text x="316" y="335" text-anchor="end" fill="#4a7a9a" font-family="Share Tech Mono" font-size="9">GPIO21</text>
+
+        <!-- ESP32 pins right side labels -->
+        <text x="484" y="215" fill="#4a7a9a" font-family="Share Tech Mono" font-size="9">VIN (5V)</text>
+        <text x="484" y="235" fill="#4a7a9a" font-family="Share Tech Mono" font-size="9">GND</text>
+        <text x="484" y="255" fill="#4a7a9a" font-family="Share Tech Mono" font-size="9">GPIO22</text>
+        <text x="484" y="275" fill="#4a7a9a" font-family="Share Tech Mono" font-size="9">GPIO23</text>
+        <text x="484" y="295" fill="#4a7a9a" font-family="Share Tech Mono" font-size="9">GPIO25</text>
+        <text x="484" y="315" fill="#4a7a9a" font-family="Share Tech Mono" font-size="9">GPIO26</text>
+        <text x="484" y="335" fill="#4a7a9a" font-family="Share Tech Mono" font-size="9">GPIO27</text>
+
+        <!-- Pin dots left -->
+        <g fill="#1e3a5a">
+          <circle cx="320" cy="212" r="4"/><circle cx="320" cy="232" r="4"/>
+          <circle cx="320" cy="252" r="4"/><circle cx="320" cy="272" r="4"/>
+          <circle cx="320" cy="292" r="4"/><circle cx="320" cy="312" r="4"/>
+          <circle cx="320" cy="332" r="4"/>
+        </g>
+        <!-- Pin dots right -->
+        <g fill="#1e3a5a">
+          <circle cx="480" cy="212" r="4"/><circle cx="480" cy="232" r="4"/>
+          <circle cx="480" cy="252" r="4"/><circle cx="480" cy="272" r="4"/>
+          <circle cx="480" cy="292" r="4"/><circle cx="480" cy="312" r="4"/>
+          <circle cx="480" cy="332" r="4"/>
+        </g>
+
+        <!-- ===== DFPLAYER MINI ===== -->
+        <rect x="600" y="185" width="120" height="130" rx="6" fill="#111827" stroke="#1e3a5a" stroke-width="2"/>
+        <rect x="600" y="185" width="120" height="22" rx="6" fill="#1a2840"/>
+        <text x="660" y="200" text-anchor="middle" fill="#00ff88" font-family="Share Tech Mono" font-size="9" font-weight="bold">DFPLAYER MINI</text>
+        <!-- SD card slot indicator -->
+        <rect x="610" y="295" width="40" height="14" rx="3" fill="#0a1520" stroke="#2a4a6a" stroke-width="1"/>
+        <text x="630" y="305" text-anchor="middle" fill="#2a5a4a" font-family="Share Tech Mono" font-size="7">SD</text>
+
+        <!-- DFPlayer pin labels -->
+        <text x="596" y="220" text-anchor="end" fill="#4a7a9a" font-family="Share Tech Mono" font-size="8">VCC</text>
+        <text x="596" y="236" text-anchor="end" fill="#4a7a9a" font-family="Share Tech Mono" font-size="8">RX</text>
+        <text x="596" y="252" text-anchor="end" fill="#4a7a9a" font-family="Share Tech Mono" font-size="8">TX</text>
+        <text x="596" y="268" text-anchor="end" fill="#4a7a9a" font-family="Share Tech Mono" font-size="8">GND</text>
+        <text x="724" y="220" fill="#4a7a9a" font-family="Share Tech Mono" font-size="8">SPK+</text>
+        <text x="724" y="236" fill="#4a7a9a" font-family="Share Tech Mono" font-size="8">SPK-</text>
+
+        <g fill="#1e3a5a">
+          <circle cx="600" cy="218" r="3"/><circle cx="600" cy="234" r="3"/>
+          <circle cx="600" cy="250" r="3"/><circle cx="600" cy="266" r="3"/>
+          <circle cx="720" cy="218" r="3"/><circle cx="720" cy="234" r="3"/>
+        </g>
+
+        <!-- ===== SPEAKER ===== -->
+        <ellipse cx="820" cy="226" rx="40" ry="40" fill="#111827" stroke="#1e3a5a" stroke-width="2"/>
+        <ellipse cx="820" cy="226" rx="28" ry="28" fill="#0a1520" stroke="#1a3a5a" stroke-width="1"/>
+        <ellipse cx="820" cy="226" rx="14" ry="14" fill="#111827" stroke="#1a3a5a" stroke-width="1"/>
+        <ellipse cx="820" cy="226" rx="5" ry="5" fill="#1a3a5a"/>
+        <text x="820" y="282" text-anchor="middle" fill="#4a7a9a" font-family="Share Tech Mono" font-size="8">8Ω 3W</text>
+        <text x="820" y="292" text-anchor="middle" fill="#4a7a9a" font-family="Share Tech Mono" font-size="8">SPEAKER</text>
+
+        <!-- ===== BUTTONS ===== -->
+        <!-- Button 1 -->
+        <rect x="30" y="160" width="50" height="50" rx="25" fill="#cc2222" stroke="#ff4444" stroke-width="2" filter="url(#glow)"/>
+        <text x="55" y="178" text-anchor="middle" fill="white" font-family="Share Tech Mono" font-size="8">BTN</text>
+        <text x="55" y="190" text-anchor="middle" fill="white" font-family="Share Tech Mono" font-size="8">1</text>
+        <text x="55" y="225" text-anchor="middle" fill="#ff4444" font-family="Share Tech Mono" font-size="8">GPIO18</text>
+
+        <!-- Button 2 -->
+        <rect x="100" y="160" width="50" height="50" rx="25" fill="#1a8822" stroke="#44ff44" stroke-width="2" filter="url(#glow)"/>
+        <text x="125" y="178" text-anchor="middle" fill="white" font-family="Share Tech Mono" font-size="8">BTN</text>
+        <text x="125" y="190" text-anchor="middle" fill="white" font-family="Share Tech Mono" font-size="8">2</text>
+        <text x="125" y="225" text-anchor="middle" fill="#44ff44" font-family="Share Tech Mono" font-size="8">GPIO19</text>
+
+        <!-- Button 3 -->
+        <rect x="30" y="260" width="50" height="50" rx="25" fill="#1a4488" stroke="#4488ff" stroke-width="2" filter="url(#glow)"/>
+        <text x="55" y="278" text-anchor="middle" fill="white" font-family="Share Tech Mono" font-size="8">BTN</text>
+        <text x="55" y="290" text-anchor="middle" fill="white" font-family="Share Tech Mono" font-size="8">3</text>
+        <text x="55" y="325" text-anchor="middle" fill="#4488ff" font-family="Share Tech Mono" font-size="8">GPIO21</text>
+
+        <!-- Button 4 -->
+        <rect x="100" y="260" width="50" height="50" rx="25" fill="#886600" stroke="#ffcc00" stroke-width="2" filter="url(#glow)"/>
+        <text x="125" y="278" text-anchor="middle" fill="white" font-family="Share Tech Mono" font-size="8">BTN</text>
+        <text x="125" y="290" text-anchor="middle" fill="white" font-family="Share Tech Mono" font-size="8">4</text>
+        <text x="125" y="325" text-anchor="middle" fill="#ffcc00" font-family="Share Tech Mono" font-size="8">GPIO22</text>
+
+        <!-- Button 5 -->
+        <rect x="65" y="360" width="50" height="50" rx="25" fill="#661a88" stroke="#cc44ff" stroke-width="2" filter="url(#glow)"/>
+        <text x="90" y="378" text-anchor="middle" fill="white" font-family="Share Tech Mono" font-size="8">BTN</text>
+        <text x="90" y="390" text-anchor="middle" fill="white" font-family="Share Tech Mono" font-size="8">5</text>
+        <text x="90" y="425" text-anchor="middle" fill="#cc44ff" font-family="Share Tech Mono" font-size="8">GPIO23</text>
+
+        <!-- ===== BATTERY + TP4056 ===== -->
+        <rect x="330" y="430" width="80" height="40" rx="4" fill="#111827" stroke="#1e3a5a" stroke-width="1.5"/>
+        <text x="370" y="447" text-anchor="middle" fill="#4a7a9a" font-family="Share Tech Mono" font-size="8">18650</text>
+        <text x="370" y="460" text-anchor="middle" fill="#4a7a9a" font-family="Share Tech Mono" font-size="8">BATTERY</text>
+        <rect x="324" y="443" width="6" height="14" rx="2" fill="#1e3a5a"/>
+
+        <rect x="440" y="430" width="80" height="40" rx="4" fill="#111827" stroke="#1e3a5a" stroke-width="1.5"/>
+        <text x="480" y="447" text-anchor="middle" fill="#4a7a9a" font-family="Share Tech Mono" font-size="8">TP4056</text>
+        <text x="480" y="460" text-anchor="middle" fill="#4a7a9a" font-family="Share Tech Mono" font-size="8">CHARGER</text>
+
+        <!-- ===== WIRES ===== -->
+
+        <!-- Button 1 to ESP32 GPIO18 (wire goes right) -->
+        <polyline points="80,185 210,185 210,292 320,292" fill="none" stroke="#ff4444" stroke-width="1.5" stroke-dasharray="4,2" opacity="0.8"/>
+
+        <!-- Button 2 to ESP32 GPIO19 -->
+        <polyline points="150,185 220,185 220,312 320,312" fill="none" stroke="#44ff44" stroke-width="1.5" stroke-dasharray="4,2" opacity="0.8"/>
+
+        <!-- Button 3 to ESP32 GPIO21 -->
+        <polyline points="80,285 200,285 200,332 320,332" fill="none" stroke="#4488ff" stroke-width="1.5" stroke-dasharray="4,2" opacity="0.8"/>
+
+        <!-- Button 4 to ESP32 GPIO22 -->
+        <polyline points="150,285 480,285 480,252" fill="none" stroke="#ffcc00" stroke-width="1.5" stroke-dasharray="4,2" opacity="0.8"/>
+
+        <!-- Button 5 to ESP32 GPIO23 -->
+        <polyline points="115,385 480,385 480,272" fill="none" stroke="#cc44ff" stroke-width="1.5" stroke-dasharray="4,2" opacity="0.8"/>
+
+        <!-- ESP32 TX2(GPIO17) to DFPlayer RX — with 1k resistor -->
+        <polyline points="320,272 270,272 270,140 560,140 560,234 600,234" fill="none" stroke="#ff8c00" stroke-width="2" opacity="0.9"/>
+        <!-- 1k resistor symbol on that wire -->
+        <rect x="530" y="134" width="24" height="12" rx="3" fill="#1a2840" stroke="#ff8c00" stroke-width="1.5"/>
+        <text x="542" y="143" text-anchor="middle" fill="#ff8c00" font-family="Share Tech Mono" font-size="7">1kΩ</text>
+
+        <!-- ESP32 RX2(GPIO16) to DFPlayer TX -->
+        <polyline points="320,252 260,252 260,130 570,130 570,218 600,218" fill="none" stroke="#ff8c00" stroke-width="2" opacity="0.6" stroke-dasharray="6,2"/>
+
+        <!-- ESP32 3.3V to DFPlayer VCC (red power) -->
+        <polyline points="320,212 280,212 280,120 555,120 555,130" fill="none" stroke="#ff3b3b" stroke-width="2" opacity="0.7"/>
+
+        <!-- DFPlayer SPK+ to Speaker -->
+        <line x1="720" y1="218" x2="780" y2="200" stroke="#00ff88" stroke-width="2" opacity="0.9"/>
+
+        <!-- DFPlayer SPK- to Speaker -->
+        <line x1="720" y1="234" x2="780" y2="252" stroke="#666" stroke-width="2" opacity="0.9"/>
+
+        <!-- GND bus line -->
+        <line x1="240" y1="490" x2="730" y2="490" stroke="#444" stroke-width="2" opacity="0.5"/>
+        <polyline points="320,232 240,232 240,490" fill="none" stroke="#555" stroke-width="1.5" opacity="0.6"/>
+        <polyline points="600,266 590,266 590,490" fill="none" stroke="#555" stroke-width="1.5" opacity="0.6"/>
+        <text x="400" y="505" text-anchor="middle" fill="#2a4a4a" font-family="Share Tech Mono" font-size="8">GND BUS</text>
+
+        <!-- Battery to TP4056 -->
+        <line x1="410" y1="450" x2="440" y2="450" stroke="#ff3b3b" stroke-width="1.5" opacity="0.7"/>
+        <!-- TP4056 to ESP32 VIN -->
+        <polyline points="480,430 480,400 480,355 480,212" fill="none" stroke="#ff3b3b" stroke-width="1.5" opacity="0.5" stroke-dasharray="3,3"/>
+
+        <!-- Labels -->
+        <text x="15" y="155" fill="#4a6a80" font-family="Share Tech Mono" font-size="9">ARCADE BUTTONS</text>
+        <text x="15" y="145" fill="#2a4a60" font-family="Share Tech Mono" font-size="8">(30mm LED, momentary NO)</text>
+
+        <text x="330" y="155" fill="#2a4a60" font-family="Share Tech Mono" font-size="8">UART2 SERIAL</text>
+
+        <!-- Decoupling cap note -->
+        <text x="615" y="175" fill="#2a5a4a" font-family="Share Tech Mono" font-size="7">100µF cap across VCC/GND</text>
+
+      </svg>
+
+      <div class="wire-legend">
+        <div class="wire-item"><div class="wire-swatch" style="background:#ff3b3b"></div> Power (3.3V/VIN)</div>
+        <div class="wire-item"><div class="wire-swatch" style="background:#555"></div> Ground</div>
+        <div class="wire-item"><div class="wire-swatch" style="background:#ff8c00"></div> UART Serial (TX/RX)</div>
+        <div class="wire-item"><div class="wire-swatch" style="background:#00ff88"></div> Speaker Output</div>
+        <div class="wire-item"><div class="wire-swatch" style="background:#4488ff; border: none;"></div> Button Signals</div>
+      </div>
+    </div>
+
+    <div class="note-box">
+      <strong>⚠ Important:</strong> Put a 1kΩ resistor on the ESP32 TX → DFPlayer RX line. The DFPlayer RX pin is sensitive and the resistor prevents damage. The TX line from DFPlayer back to ESP32 doesn't need one.
+    </div>
+
+    <div class="success-box">
+      <strong>✓ Pull-down resistors:</strong> Each button needs a 10kΩ resistor between its signal pin and GND. This ensures the pin reads LOW when the button isn't pressed. Without it, the pin floats and you get phantom button presses.
+    </div>
+  </div>
+
+  <!-- PIN REFERENCE TAB -->
+  <div class="tab-content" id="tab-pins">
+    <div class="wiring-diagram">
+      <div class="diagram-title">// COMPLETE PIN REFERENCE</div>
+
+      <div class="grid-2">
+        <div>
+          <h3>DFPlayer Mini</h3>
+          <table class="pin-table">
+            <tr><th>DFPlayer Pin</th><th>Connects To</th><th>Type</th></tr>
+            <tr><td>VCC</td><td>ESP32 3.3V</td><td><span class="badge badge-power">POWER</span></td></tr>
+            <tr><td>GND</td><td>GND bus</td><td><span class="badge badge-gnd">GND</span></td></tr>
+            <tr><td>RX</td><td>ESP32 GPIO17 via 1kΩ</td><td><span class="badge badge-data">DATA</span></td></tr>
+            <tr><td>TX</td><td>ESP32 GPIO16</td><td><span class="badge badge-data">DATA</span></td></tr>
+            <tr><td>SPK+</td><td>Speaker +</td><td><span class="badge badge-audio">AUDIO</span></td></tr>
+            <tr><td>SPK-</td><td>Speaker -</td><td><span class="badge badge-audio">AUDIO</span></td></tr>
+          </table>
+        </div>
+        <div>
+          <h3>Buttons (each button)</h3>
+          <table class="pin-table">
+            <tr><th>Button Pin</th><th>Connects To</th><th>Notes</th></tr>
+            <tr><td>Terminal 1</td><td>ESP32 GPIO pin</td><td><span class="badge badge-btn">SIGNAL</span></td></tr>
+            <tr><td>Terminal 2</td><td>3.3V</td><td><span class="badge badge-power">POWER</span></td></tr>
+            <tr><td>Signal pin</td><td>10kΩ to GND</td><td>Pull-down</td></tr>
+          </table>
+
+          <h3 style="margin-top:20px">Button → GPIO Map</h3>
+          <table class="pin-table">
+            <tr><th>Button</th><th>GPIO</th><th>Color</th></tr>
+            <tr><td>Button 1</td><td>GPIO18</td><td><span class="pin-dot" style="background:#ff4444"></span>Red</td></tr>
+            <tr><td>Button 2</td><td>GPIO19</td><td><span class="pin-dot" style="background:#44ff44"></span>Green</td></tr>
+            <tr><td>Button 3</td><td>GPIO21</td><td><span class="pin-dot" style="background:#4488ff"></span>Blue</td></tr>
+            <tr><td>Button 4</td><td>GPIO22</td><td><span class="pin-dot" style="background:#ffcc00"></span>Yellow</td></tr>
+            <tr><td>Button 5</td><td>GPIO23</td><td><span class="pin-dot" style="background:#cc44ff"></span>Purple</td></tr>
+            <tr><td>Bank Up</td><td>GPIO25</td><td><span class="pin-dot" style="background:#888"></span>White</td></tr>
+            <tr><td>Bank Down</td><td>GPIO26</td><td><span class="pin-dot" style="background:#888"></span>White</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <h3 style="margin-top:24px">Power Circuit</h3>
+      <table class="pin-table">
+        <tr><th>Component</th><th>From</th><th>To</th><th>Notes</th></tr>
+        <tr><td>18650 Battery</td><td>B+ terminal</td><td>TP4056 B+</td><td>Red wire</td></tr>
+        <tr><td>18650 Battery</td><td>B- terminal</td><td>TP4056 B-</td><td>Black wire</td></tr>
+        <tr><td>TP4056</td><td>OUT+</td><td>ESP32 VIN</td><td>3.7-4.2V</td></tr>
+        <tr><td>TP4056</td><td>OUT-</td><td>GND bus</td><td></td></tr>
+        <tr><td>Capacitor 100µF</td><td>Across DFPlayer VCC/GND</td><td>—</td><td>Reduces audio noise/pop</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- WEB APP PREVIEW TAB -->
+  <div class="tab-content" id="tab-webapp">
+    <div class="note-box" style="margin-bottom:20px">
+      <strong>Note:</strong> This is a preview of what the web interface will look like. It runs directly on the ESP32 — no app needed. Open a browser on any device on your WiFi and type the ESP32's IP address.
+    </div>
+
+    <div class="webapp-frame">
+      <div class="webapp-bar">
+        <div class="webapp-dots">
+          <div class="webapp-dot" style="background:#ff5f57"></div>
+          <div class="webapp-dot" style="background:#febc2e"></div>
+          <div class="webapp-dot" style="background:#28c840"></div>
+        </div>
+        <div class="webapp-url">192.168.1.142 — SoundBoard</div>
+      </div>
+
+      <div class="app-ui">
+        <div class="app-header">
+          <div class="app-logo">Sound<span>Board</span></div>
+          <div class="app-status">
+            <div class="status-dot"></div>
+            CONNECTED — IP 192.168.1.142
+          </div>
+        </div>
+
+        <div class="app-body">
+          <div class="app-sidebar">
+            <div class="sidebar-section">
+              <div class="sidebar-label">Navigation</div>
+              <div class="sidebar-item active"><span class="sidebar-icon">🎛</span> Button Layout</div>
+              <div class="sidebar-item"><span class="sidebar-icon">📁</span> Sound Files</div>
+              <div class="sidebar-item"><span class="sidebar-icon">🔊</span> Volume</div>
+              <div class="sidebar-item"><span class="sidebar-icon">⚙️</span> Settings</div>
+            </div>
+            <div class="sidebar-section">
+              <div class="sidebar-label">Sound Banks</div>
+              <div class="sidebar-item active"><span class="sidebar-icon">🏠</span> Daily Needs</div>
+              <div class="sidebar-item"><span class="sidebar-icon">📺</span> TV Control</div>
+              <div class="sidebar-item"><span class="sidebar-icon">🎵</span> Music & Fun</div>
+              <div class="sidebar-item"><span class="sidebar-icon">+</span> Add Bank</div>
+            </div>
+          </div>
+
+          <div class="app-main">
+            <div class="section-header">
+              <div class="section-title">Bank: Daily Needs</div>
+              <button class="btn btn-primary">+ Upload Sound</button>
+            </div>
+
+            <div class="bank-row">
+              <button class="bank-btn active">Daily Needs</button>
+              <button class="bank-btn">TV Control</button>
+              <button class="bank-btn">Music & Fun</button>
+              <button class="bank-btn">+ New Bank</button>
+            </div>
+
+            <div class="button-grid">
+              <div class="sound-button assigned">
+                <div class="btn-color" style="background:#cc2222; box-shadow:0 0 8px #cc2222"></div>
+                <div class="btn-number">BTN 1</div>
+                <div class="btn-label">I need to go potty</div>
+                <div class="btn-file">0001.mp3</div>
+              </div>
+              <div class="sound-button assigned">
+                <div class="btn-color" style="background:#1a8822; box-shadow:0 0 8px #1a8822"></div>
+                <div class="btn-number">BTN 2</div>
+                <div class="btn-label">Change the show please</div>
+                <div class="btn-file">0002.mp3</div>
+              </div>
+              <div class="sound-button assigned">
+                <div class="btn-color" style="background:#1a4488; box-shadow:0 0 8px #1a4488"></div>
+                <div class="btn-number">BTN 3</div>
+                <div class="btn-label">I'm hungry</div>
+                <div class="btn-file">0003.mp3</div>
+              </div>
+              <div class="sound-button assigned">
+                <div class="btn-color" style="background:#886600; box-shadow:0 0 8px #886600"></div>
+                <div class="btn-number">BTN 4</div>
+                <div class="btn-label">I want a hug</div>
+                <div class="btn-file">0004.mp3</div>
+              </div>
+              <div class="sound-button assigned">
+                <div class="btn-color" style="background:#661a88; box-shadow:0 0 8px #661a88"></div>
+                <div class="btn-number">BTN 5</div>
+                <div class="btn-label">I'm tired</div>
+                <div class="btn-file">0005.mp3</div>
+              </div>
+            </div>
+
+            <div class="section-header">
+              <div class="section-title">Sound Files on SD Card</div>
+              <button class="btn btn-ghost">Refresh</button>
+            </div>
+
+            <div class="upload-zone">
+              <div class="upload-icon">📂</div>
+              <div class="upload-text">Drop MP3 files here or click to upload</div>
+              <div class="upload-sub">Files saved directly to SD card • Drag to assign to buttons</div>
+            </div>
+
+            <div class="file-list">
+              <div class="file-item">
+                <span class="file-icon">🎵</span>
+                <span class="file-name">0001.mp3</span>
+                <span class="file-size">48kb</span>
+                <span class="file-assign">Assigned → BTN1</span>
+              </div>
+              <div class="file-item">
+                <span class="file-icon">🎵</span>
+                <span class="file-name">0002.mp3</span>
+                <span class="file-size">52kb</span>
+                <span class="file-assign">Assigned → BTN2</span>
+              </div>
+              <div class="file-item">
+                <span class="file-icon">🎵</span>
+                <span class="file-name">0003.mp3</span>
+                <span class="file-size">38kb</span>
+                <span class="file-assign">Assigned → BTN3</span>
+              </div>
+            </div>
+
+            <div class="section-header">
+              <div class="section-title">Volume</div>
+            </div>
+            <div class="volume-row">
+              <span class="volume-label">🔊 Volume</span>
+              <input type="range" class="volume-slider" min="0" max="30" value="21">
+              <span class="volume-val">21</span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CODE TAB -->
+  <div class="tab-content" id="tab-code">
+    <div class="wiring-diagram">
+      <div class="diagram-title">// STARTER CODE — ARDUINO IDE (ESP32)</div>
+
+      <div class="note-box">
+        <strong>Libraries needed:</strong> Install via Arduino Library Manager — "DFRobotDFPlayerMini" and "ESPAsyncWebServer" + "AsyncTCP"
+      </div>
+
+      <h3>1. Board Setup</h3>
+      <p>In Arduino IDE: Tools → Board → ESP32 Arduino → ESP32 Dev Module. Tools → Port → your COM port.</p>
+
+      <h3>2. Main Firmware</h3>
+      <div class="code-block">
+<span class="code-comment">// ESP32 Soundboard — Core Firmware
+// Install: DFRobotDFPlayerMini library</span>
+
+<span class="code-keyword">#include</span> <span class="code-string">&lt;Arduino.h&gt;</span>
+<span class="code-keyword">#include</span> <span class="code-string">&lt;DFRobotDFPlayerMini.h&gt;</span>
+<span class="code-keyword">#include</span> <span class="code-string">&lt;WiFi.h&gt;</span>
+<span class="code-keyword">#include</span> <span class="code-string">&lt;ESPAsyncWebServer.h&gt;</span>
+
+<span class="code-comment">// --- WiFi credentials ---</span>
+<span class="code-keyword">const char*</span> <span class="code-var">ssid</span>     = <span class="code-string">"YOUR_WIFI_NAME"</span>;
+<span class="code-keyword">const char*</span> <span class="code-var">password</span> = <span class="code-string">"YOUR_WIFI_PASSWORD"</span>;
+
+<span class="code-comment">// --- Button pins ---</span>
+<span class="code-keyword">const int</span> <span class="code-var">BUTTONS[]</span> = {<span class="code-number">18</span>, <span class="code-number">19</span>, <span class="code-number">21</span>, <span class="code-number">22</span>, <span class="code-number">23</span>};
+<span class="code-keyword">const int</span> <span class="code-var">NUM_BUTTONS</span> = <span class="code-number">5</span>;
+<span class="code-keyword">const int</span> <span class="code-var">BANK_UP_PIN</span> = <span class="code-number">25</span>;
+<span class="code-keyword">const int</span> <span class="code-var">BANK_DOWN_PIN</span> = <span class="code-number">26</span>;
+
+<span class="code-comment">// --- DFPlayer on UART2 ---</span>
+<span class="code-var">HardwareSerial</span> <span class="code-func">dfSerial</span>(<span class="code-number">2</span>);
+<span class="code-var">DFRobotDFPlayerMini</span> <span class="code-var">dfPlayer</span>;
+<span class="code-var">AsyncWebServer</span> <span class="code-func">server</span>(<span class="code-number">80</span>);
+
+<span class="code-comment">// --- State ---</span>
+<span class="code-keyword">int</span> <span class="code-var">currentBank</span> = <span class="code-number">0</span>;
+<span class="code-keyword">int</span> <span class="code-var">numBanks</span> = <span class="code-number">3</span>;
+<span class="code-keyword">bool</span> <span class="code-var">lastButtonState[]</span> = {<span class="code-keyword">false</span>,<span class="code-keyword">false</span>,<span class="code-keyword">false</span>,<span class="code-keyword">false</span>,<span class="code-keyword">false</span>};
+
+<span class="code-keyword">void</span> <span class="code-func">setup</span>() {
+  Serial.<span class="code-func">begin</span>(<span class="code-number">115200</span>);
+
+  <span class="code-comment">// Init buttons</span>
+  <span class="code-keyword">for</span> (<span class="code-keyword">int</span> i = <span class="code-number">0</span>; i &lt; NUM_BUTTONS; i++) {
+    <span class="code-func">pinMode</span>(BUTTONS[i], INPUT);
+  }
+  <span class="code-func">pinMode</span>(BANK_UP_PIN, INPUT);
+  <span class="code-func">pinMode</span>(BANK_DOWN_PIN, INPUT);
+
+  <span class="code-comment">// Init DFPlayer</span>
+  dfSerial.<span class="code-func">begin</span>(<span class="code-number">9600</span>, SERIAL_8N1, <span class="code-number">16</span>, <span class="code-number">17</span>);
+  dfPlayer.<span class="code-func">begin</span>(dfSerial);
+  dfPlayer.<span class="code-func">volume</span>(<span class="code-number">20</span>);
+
+  <span class="code-comment">// Connect WiFi</span>
+  WiFi.<span class="code-func">begin</span>(ssid, password);
+  <span class="code-keyword">while</span> (WiFi.<span class="code-func">status</span>() != WL_CONNECTED) {
+    <span class="code-func">delay</span>(<span class="code-number">500</span>);
+  }
+  Serial.<span class="code-func">println</span>(WiFi.<span class="code-func">localIP</span>()); <span class="code-comment">// Print IP to Serial Monitor</span>
+
+  <span class="code-comment">// Web server routes (expanded in full code)</span>
+  server.<span class="code-func">begin</span>();
+}
+
+<span class="code-keyword">void</span> <span class="code-func">loop</span>() {
+  <span class="code-keyword">for</span> (<span class="code-keyword">int</span> i = <span class="code-number">0</span>; i &lt; NUM_BUTTONS; i++) {
+    <span class="code-keyword">bool</span> pressed = <span class="code-func">digitalRead</span>(BUTTONS[i]) == HIGH;
+    <span class="code-keyword">if</span> (pressed &amp;&amp; !lastButtonState[i]) {
+      <span class="code-comment">// File number = bank * 10 + button + 1
+      // Bank 0 btn 0 = file 1, Bank 1 btn 0 = file 11, etc.</span>
+      <span class="code-keyword">int</span> fileNum = (currentBank * NUM_BUTTONS) + i + <span class="code-number">1</span>;
+      dfPlayer.<span class="code-func">play</span>(fileNum);
+    }
+    lastButtonState[i] = pressed;
+  }
+  <span class="code-comment">// Bank switching</span>
+  <span class="code-keyword">if</span> (<span class="code-func">digitalRead</span>(BANK_UP_PIN) == HIGH) currentBank = (currentBank + <span class="code-number">1</span>) % numBanks;
+  <span class="code-keyword">if</span> (<span class="code-func">digitalRead</span>(BANK_DOWN_PIN) == HIGH) currentBank = (currentBank - <span class="code-number">1</span> + numBanks) % numBanks;
+  <span class="code-func">delay</span>(<span class="code-number">50</span>); <span class="code-comment">// Debounce</span>
+}
+      </div>
+
+      <h3>3. SD Card File Naming</h3>
+      <p>DFPlayer reads files by number. Name your MP3s like this:</p>
+      <div class="code-block">
+<span class="code-comment">Bank 0 (Daily Needs):</span>
+<span class="code-string">0001.mp3</span>  <span class="code-comment">→ Button 1 "I need to go potty"</span>
+<span class="code-string">0002.mp3</span>  <span class="code-comment">→ Button 2 "Change the show please"</span>
+<span class="code-string">0003.mp3</span>  <span class="code-comment">→ Button 3 "I'm hungry"</span>
+<span class="code-string">0004.mp3</span>  <span class="code-comment">→ Button 4 "I want a hug"</span>
+<span class="code-string">0005.mp3</span>  <span class="code-comment">→ Button 5 "I'm tired"</span>
+
+<span class="code-comment">Bank 1 (TV Control):</span>
+<span class="code-string">0006.mp3</span>  <span class="code-comment">→ Button 1 "Turn it up"</span>
+<span class="code-string">0007.mp3</span>  <span class="code-comment">→ Button 2 "Turn it down"</span>
+<span class="code-comment">... and so on</span>
+      </div>
+
+      <div class="success-box">
+        <strong>✓ Free TTS tools to make the audio files:</strong> Google Text-to-Speech, ElevenLabs (free tier), or just record yourself on your phone. Export as MP3, rename the file, drop on SD card.
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Volume slider live update
+document.querySelector('.volume-slider').addEventListener('input', function() {
+  this.nextElementSibling.textContent = this.value;
+  const pct = (this.value / 30) * 100;
+  this.style.background = `linear-gradient(to right, #00d4ff ${pct}%, #1a2a3a ${pct}%)`;
+});
+</script>
+</body>
+</html>
