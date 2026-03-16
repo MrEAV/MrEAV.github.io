@@ -185,9 +185,22 @@
       letter-spacing: 1px;
       margin-top: 0.75rem;
       text-align: center;
+      line-height: 1.8;
     }
 
     .error-msg.visible { display: block; }
+
+    .hint-msg {
+      display: none;
+      font-size: 0.62rem;
+      color: #1a6a4a;
+      letter-spacing: 1px;
+      margin-top: 0.5rem;
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    .hint-msg.visible { display: block; }
 
     .hint {
       margin-top: 2rem;
@@ -251,6 +264,10 @@
         &gt; ACCESS DENIED — INCORRECT KEY
       </div>
 
+      <div class="hint-msg" id="hintMsg">
+        &gt; HINT: three words — the last thing said on the about page
+      </div>
+
       <div class="hint">
         // not all doors are meant to be opened //<br>
         // but nerds find a way //<br><br>
@@ -270,9 +287,8 @@
     // ALLONELOVE
     // ============================================================
 
-    // Encoded so it's not completely obvious on a casual glance
-    // but obvious to anyone who knows what base64 is
     const _k = "ALLONELOVE";
+    let attempts = 0;
 
     document.getElementById('passInput').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') attemptUnlock();
@@ -282,15 +298,21 @@
       const input = document.getElementById('passInput').value.toUpperCase().trim();
       const field = document.getElementById('passInput');
       const err = document.getElementById('errorMsg');
+      const hint = document.getElementById('hintMsg');
 
       if (input === _k) {
         document.body.classList.add('unlocked');
       } else {
+        attempts++;
         field.classList.add('error');
         err.classList.add('visible');
         setTimeout(() => field.classList.remove('error'), 400);
         field.value = '';
         field.focus();
+
+        if (attempts >= 3) {
+          hint.classList.add('visible');
+        }
       }
     }
   </script>
