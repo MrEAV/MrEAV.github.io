@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZS3VT516W2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-ZS3VT516W2');
+</script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EAV Glass — Oxygen Torch System Schematic</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Bebas+Neue&display=swap');
+
+  :root {
+    --bg: #0d2538;
+    --bg-2: #0a1c2b;
+    --ink: #e8f1ff;
+    --ink-dim: #7fa3c7;
+    --accent: #ffb347;
+    --accent-2: #4fd1ff;
+    --danger: #ff5a5a;
+    --line: #4fd1ff;
+    --grid: rgba(79, 209, 255, 0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 40px 40px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 40px 40px,
+      radial-gradient(ellipse at top, var(--bg) 0%, var(--bg-2) 100%);
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .back-link {
+    max-width: 1400px;
+    margin: 0 auto 16px auto;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .back-link a {
+    color: var(--accent-2);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--accent-2);
+    padding-bottom: 2px;
+  }
+  .back-link a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .frame {
+    max-width: 1400px;
+    margin: 0 auto;
+    border: 2px solid var(--line);
+    padding: 30px;
+    position: relative;
+    background: rgba(10, 28, 43, 0.6);
+  }
+
+  .frame::before, .frame::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    border: 2px solid var(--accent);
+  }
+  .frame::before { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+  .frame::after { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px dashed var(--ink-dim);
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(32px, 5vw, 56px);
+    letter-spacing: 4px;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .subtitle {
+    color: var(--ink-dim);
+    font-size: 12px;
+    letter-spacing: 2px;
+    margin-top: 8px;
+    text-transform: uppercase;
+  }
+
+  .meta {
+    font-size: 11px;
+    color: var(--ink-dim);
+    text-align: right;
+    line-height: 1.8;
+  }
+  .meta span { color: var(--accent-2); }
+
+  .warning-banner {
+    border: 2px solid var(--danger);
+    background: rgba(255, 90, 90, 0.08);
+    padding: 16px 20px;
+    margin-bottom: 30px;
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--ink);
+    letter-spacing: 0.5px;
+  }
+  .warning-banner h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 3px;
+    color: var(--danger);
+    margin-bottom: 8px;
+  }
+  .warning-banner strong { color: var(--danger); }
+
+  .diagram {
+    position: relative;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-width: 1100px;
+  }
+
+  .legend {
+    margin-top: 30px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    border-top: 1px dashed var(--ink-dim);
+    padding-top: 24px;
+  }
+
+  .legend-item {
+    border-left: 3px solid var(--accent-2);
+    padding: 10px 14px;
+    background: rgba(79, 209, 255, 0.05);
+  }
+  .legend-item.warn { border-left-color: var(--danger); }
+  .legend-item.safe { border-left-color: var(--accent); }
+  .legend-item.optional { border-left-style: dashed; opacity: 0.85; }
+
+  .legend-item h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: var(--accent);
+  }
+  .legend-item.warn h3 { color: var(--danger); }
+  .legend-item.safe h3 { color: var(--accent-2); }
+
+  .legend-item .opt-tag {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 2px;
+    padding: 2px 6px;
+    border: 1px dashed var(--ink-dim);
+    color: var(--ink-dim);
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  .legend-item p {
+    font-size: 11px;
+    color: var(--ink-dim);
+    line-height: 1.6;
+    margin-top: 4px;
+  }
+
+  .disclaimer {
+    margin-top: 30px;
+    padding: 20px;
+    border: 1px dashed var(--ink-dim);
+    background: rgba(10, 28, 43, 0.5);
+    font-size: 10px;
+    line-height: 1.8;
+    color: var(--ink-dim);
+    letter-spacing: 0.5px;
+  }
+  .disclaimer h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .disclaimer p { margin-bottom: 10px; }
+  .disclaimer p:last-child { margin-bottom: 0; }
+  .disclaimer strong { color: var(--ink); }
+
+  footer {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px dashed var(--ink-dim);
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--ink-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* SVG element styling */
+  .box { fill: rgba(10, 28, 43, 0.9); stroke: var(--line); stroke-width: 2; }
+  .box-accent { fill: rgba(255, 179, 71, 0.1); stroke: var(--accent); stroke-width: 2; }
+  .box-danger { fill: rgba(255, 90, 90, 0.1); stroke: var(--danger); stroke-width: 2; }
+  .box-optional { fill: rgba(10, 28, 43, 0.6); stroke: var(--line); stroke-width: 2; stroke-dasharray: 6 4; opacity: 0.75; }
+  .label { fill: var(--ink); font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; }
+  .label-small { fill: var(--ink-dim); font-family: 'JetBrains Mono', monospace; font-size: 9px; }
+  .label-big { fill: var(--accent); font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px; }
+  .pipe { fill: none; stroke: var(--line); stroke-width: 2.5; }
+  .pipe-optional { fill: none; stroke: var(--line); stroke-width: 2.5; stroke-dasharray: 6 4; opacity: 0.75; }
+  .pipe-arrow { fill: var(--line); }
+  .tag { fill: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; }
+  .tag-opt { fill: var(--ink-dim); font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 1px; }
+
+  @keyframes flow {
+    from { stroke-dashoffset: 20; }
+    to { stroke-dashoffset: 0; }
+  }
+  .pipe-flow {
+    stroke-dasharray: 6 4;
+    animation: flow 1s linear infinite;
+  }
+</style>
+</head>
+<body>
+
+  <div class="back-link">
+    <a href="../index.html">← Back to EAV Glass</a>
+  </div>
+
+  <div class="frame">
+
+    <header>
+      <div>
+        <h1>Oxygen Torch System</h1>
+        <div class="subtitle">// Process &amp; Instrumentation Schematic</div>
+      </div>
+      <div class="meta">
+        DWG-01 / REV-A<br />
+        SHEET 1 OF 1<br />
+        <span>STATUS: DESIGN</span>
+      </div>
+    </header>
+
+    <div class="warning-banner">
+      <h2>⚠ Safety Notice — Read Before Building</h2>
+      <p>
+        Pure oxygen is an <strong>aggressive oxidizer</strong>. Oil, grease, hydrocarbons, or even fingerprints on
+        fittings can ignite violently in an O₂-enriched stream — sometimes with no warning and no ignition source.
+        Every component in this system (compressor, tank, regulator, fittings, hose, thread sealant) <strong>MUST be
+        rated and certified oil-free for oxygen service</strong>. Do not substitute standard shop-air parts.
+        When in doubt, consult a qualified gas systems professional.
+      </p>
+    </div>
+
+    <div class="diagram">
+      <svg viewBox="0 0 1300 720" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- ============ TIER 1: concentrators top row ============ -->
+        <g id="rack">
+          <rect x="30" y="60" width="340" height="320" fill="none" stroke="#7fa3c7" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <text x="200" y="52" text-anchor="middle" class="label-big">WIRE RACK — 2 TIER</text>
+          <text x="200" y="398" text-anchor="middle" class="label-small">4x O₂ CONCENTRATORS — PARALLEL</text>
+
+          <line x1="30" y1="220" x2="370" y2="220" stroke="#7fa3c7" stroke-width="1" stroke-dasharray="3 2"/>
+
+          <rect x="60" y="85" width="130" height="120" class="box-accent"/>
+          <text x="125" y="110" text-anchor="middle" class="label">O₂ CONC. #1</text>
+          <text x="125" y="128" text-anchor="middle" class="label-small">10 LPM / 90% O₂</text>
+          <circle cx="125" cy="155" r="12" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="125" y="159" text-anchor="middle" class="tag">O₂</text>
+          <text x="125" y="188" text-anchor="middle" class="label-small">[CN-01]</text>
+
+          <rect x="210" y="85" width="130" height="120" class="box-accent"/>
+          <text x="275" y="110" text-anchor="middle" class="label">O₂ CONC. #2</text>
+          <text x="275" y="128" text-anchor="middle" class="label-small">10 LPM / 90% O₂</text>
+          <circle cx="275" cy="155" r="12" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="275" y="159" text-anchor="middle" class="tag">O₂</text>
+          <text x="275" y="188" text-anchor="middle" class="label-small">[CN-02]</text>
+
+          <rect x="60" y="240" width="130" height="120" class="box-accent"/>
+          <text x="125" y="265" text-anchor="middle" class="label">O₂ CONC. #3</text>
+          <text x="125" y="283" text-anchor="middle" class="label-small">10 LPM / 90% O₂</text>
+          <circle cx="125" cy="310" r="12" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="125" y="314" text-anchor="middle" class="tag">O₂</text>
+          <text x="125" y="343" text-anchor="middle" class="label-small">[CN-03]</text>
+
+          <rect x="210" y="240" width="130" height="120" class="box-accent"/>
+          <text x="275" y="265" text-anchor="middle" class="label">O₂ CONC. #4</text>
+          <text x="275" y="283" text-anchor="middle" class="label-small">10 LPM / 90% O₂</text>
+          <circle cx="275" cy="310" r="12" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="275" y="314" text-anchor="middle" class="tag">O₂</text>
+          <text x="275" y="343" text-anchor="middle" class="label-small">[CN-04]</text>
+        </g>
+
+        <!-- ============ PARALLEL MANIFOLD ============ -->
+        <path d="M 190 145 L 410 145 L 410 300" class="pipe pipe-flow"/>
+        <path d="M 340 145 L 390 145" class="pipe pipe-flow"/>
+        <path d="M 390 145 L 390 300" class="pipe pipe-flow" stroke="var(--line)"/>
+        <path d="M 190 300 L 390 300" class="pipe pipe-flow"/>
+        <path d="M 340 300 L 410 300" class="pipe pipe-flow"/>
+
+        <circle cx="410" cy="300" r="4" fill="var(--line)"/>
+        <circle cx="390" cy="300" r="4" fill="var(--line)"/>
+        <text x="430" y="240" class="label-small">MANIFOLD</text>
+        <text x="430" y="254" class="label-small">~40 LPM TOTAL</text>
+
+        <path d="M 410 300 L 490 300" class="pipe pipe-flow"/>
+        <polygon points="490,300 482,295 482,305" class="pipe-arrow"/>
+
+        <!-- ============ BUFFER TANK (5 GAL) — OPTIONAL ============ -->
+        <g id="buffer">
+          <rect x="495" y="240" width="130" height="130" rx="65" class="box-optional"/>
+          <text x="560" y="278" text-anchor="middle" class="label">BUFFER</text>
+          <text x="560" y="295" text-anchor="middle" class="label">TANK</text>
+          <text x="560" y="313" text-anchor="middle" class="tag-opt">( OPTIONAL )</text>
+          <text x="560" y="332" text-anchor="middle" class="label-small">5 GAL / LOW PSI</text>
+          <text x="560" y="345" text-anchor="middle" class="label-small">[BT-01]</text>
+          <circle cx="560" cy="258" r="8" fill="none" stroke="var(--accent-2)" stroke-width="1"/>
+          <line x1="560" y1="258" x2="564" y2="254" stroke="var(--accent-2)" stroke-width="1"/>
+        </g>
+
+        <path d="M 625 305 L 720 305" class="pipe pipe-flow"/>
+        <polygon points="720,305 712,300 712,310" class="pipe-arrow"/>
+
+        <!-- ============ GAST OILLESS COMPRESSOR ============ -->
+        <g id="compressor">
+          <rect x="725" y="250" width="140" height="110" class="box"/>
+          <text x="795" y="280" text-anchor="middle" class="label">GAST OILLESS</text>
+          <text x="795" y="298" text-anchor="middle" class="label">COMPRESSOR</text>
+          <text x="795" y="320" text-anchor="middle" class="label-small">LOW DRAW CFM</text>
+          <text x="795" y="345" text-anchor="middle" class="label-small">[CMP-01]</text>
+          <circle cx="750" cy="270" r="5" fill="var(--accent)"/>
+        </g>
+
+        <path d="M 865 305 L 930 305" class="pipe pipe-flow"/>
+        <polygon points="930,305 922,300 922,310" class="pipe-arrow"/>
+
+        <!-- ============ 80 GAL STORAGE TANK ============ -->
+        <g id="tank80">
+          <rect x="935" y="200" width="120" height="200" rx="60" class="box"/>
+          <text x="995" y="245" text-anchor="middle" class="label">80 GAL</text>
+          <text x="995" y="263" text-anchor="middle" class="label">STORAGE</text>
+          <text x="995" y="285" text-anchor="middle" class="label-small">HIGH PSI</text>
+          <circle cx="995" cy="320" r="14" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+          <line x1="995" y1="320" x2="1003" y2="313" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="995" y="355" text-anchor="middle" class="label-small">PI-01</text>
+          <text x="995" y="390" text-anchor="middle" class="label-small">[ST-01]</text>
+        </g>
+
+        <path d="M 1055 300 L 1110 300" class="pipe pipe-flow"/>
+        <polygon points="1110,300 1102,295 1102,305" class="pipe-arrow"/>
+
+        <!-- ============ REGULATOR ============ -->
+        <g id="reg">
+          <polygon points="1115,270 1180,250 1180,350 1115,330" class="box"/>
+          <text x="1148" y="298" text-anchor="middle" class="label">REG</text>
+          <text x="1148" y="315" text-anchor="middle" class="label-small">[PCV-01]</text>
+          <circle cx="1148" cy="240" r="8" fill="none" stroke="var(--accent-2)" stroke-width="1.5"/>
+          <line x1="1148" y1="250" x2="1148" y2="265" stroke="var(--accent-2)" stroke-width="1.5"/>
+        </g>
+
+        <path d="M 1148 350 L 1148 440" class="pipe pipe-flow"/>
+        <polygon points="1148,440 1143,432 1153,432" class="pipe-arrow"/>
+
+        <!-- ============ FLASHBACK ARRESTOR ============ -->
+        <g id="flashback">
+          <rect x="1060" y="445" width="180" height="70" class="box-danger"/>
+          <text x="1150" y="470" text-anchor="middle" class="label" fill="var(--danger)">⚠ FLASHBACK ARRESTOR</text>
+          <text x="1150" y="487" text-anchor="middle" class="label-small">CHECK VALVE + FLAME TRAP</text>
+          <text x="1150" y="502" text-anchor="middle" class="label-small">[FBA-01]</text>
+        </g>
+
+        <path d="M 1060 480 L 900 480" class="pipe pipe-flow"/>
+        <path d="M 900 480 L 900 580" class="pipe pipe-flow"/>
+        <path d="M 900 580 L 700 580" class="pipe pipe-flow"/>
+        <text x="800" y="475" class="label-small">HOSE — O₂ RATED</text>
+
+        <!-- ============ FOOT PEDAL ============ -->
+        <g id="pedal">
+          <rect x="560" y="555" width="140" height="55" rx="8" class="box"/>
+          <text x="630" y="580" text-anchor="middle" class="label">FOOT PEDAL</text>
+          <text x="630" y="596" text-anchor="middle" class="label-small">ON/OFF VALVE [FV-01]</text>
+          <rect x="575" y="545" width="110" height="10" fill="var(--accent)" opacity="0.7"/>
+        </g>
+
+        <path d="M 560 582 L 430 582" class="pipe pipe-flow"/>
+        <polygon points="430,582 438,577 438,587" class="pipe-arrow"/>
+
+        <!-- ============ TORCH ============ -->
+        <g id="torch">
+          <rect x="280" y="540" width="140" height="80" class="box-danger"/>
+          <text x="350" y="570" text-anchor="middle" class="label" fill="var(--danger)">🔥 TORCH</text>
+          <text x="350" y="588" text-anchor="middle" class="label-small">OXY-FUEL HEAD</text>
+          <text x="350" y="603" text-anchor="middle" class="label-small">[TR-01]</text>
+          <path d="M 420 580 L 450 570 L 440 580 L 460 575 L 445 585 L 465 585 L 440 595 L 450 605 L 425 595" fill="var(--accent)" opacity="0.8"/>
+        </g>
+
+        <!-- ============ FLOW DIRECTION TITLE ============ -->
+        <g>
+          <text x="100" y="665" class="label-small">FLOW →</text>
+          <line x1="140" y1="662" x2="1200" y2="662" stroke="var(--accent-2)" stroke-width="1" stroke-dasharray="2 3"/>
+          <text x="1210" y="665" class="label-small">OUTPUT</text>
+        </g>
+
+        <!-- ============ Tag numbers floating ============ -->
+        <text x="440" y="280" class="tag">① PARALLEL</text>
+        <text x="640" y="225" class="tag">② BUFFER (OPT)</text>
+        <text x="760" y="240" class="tag">③ COMPRESS</text>
+        <text x="960" y="190" class="tag">④ STORAGE</text>
+        <text x="1110" y="245" class="tag">⑤ REGULATE</text>
+        <text x="1090" y="440" class="tag">⑥ SAFETY</text>
+        <text x="580" y="540" class="tag">⑦ CONTROL</text>
+        <text x="300" y="530" class="tag">⑧ DELIVERY</text>
+      </svg>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item safe">
+        <h3>① Parallel O₂ Source</h3>
+        <p>4x concentrators on 2-tier wire rack feed a common manifold. At ~10 LPM each, combined output is roughly 40 LPM of 90%+ O₂.</p>
+      </div>
+      <div class="legend-item safe optional">
+        <h3>② Buffer Tank <span class="opt-tag">OPTIONAL</span></h3>
+        <p>Low-pressure reservoir decouples concentrator flow from compressor draw. Helps prevent starving the concentrators and dropping O₂ purity. Can be omitted if the compressor duty cycle stays within concentrator output.</p>
+      </div>
+      <div class="legend-item">
+        <h3>③ Oilless Compressor</h3>
+        <p>Gast oilless — critical for O₂ service. Any oil in pure O₂ creates severe fire/explosion hazard. Pulls from buffer (or directly from manifold), pushes to storage.</p>
+      </div>
+      <div class="legend-item">
+        <h3>④ Storage Tank (80 gal)</h3>
+        <p>High-pressure reserve. Provides sustained working volume for the torch so the compressor can cycle rather than run continuously. Must be clean and oxygen-service rated.</p>
+      </div>
+      <div class="legend-item">
+        <h3>⑤ Regulator</h3>
+        <p>Step-down from tank pressure to working torch pressure. Must be O₂-rated (no oil/grease on seats).</p>
+      </div>
+      <div class="legend-item warn">
+        <h3>⑥ Flashback Arrestor ⚠</h3>
+        <p>CRITICAL safety device. Stops flame front from traveling upstream into the tank if the torch backfires. Install as close to torch side as possible.</p>
+      </div>
+      <div class="legend-item">
+        <h3>⑦ Foot Pedal Valve</h3>
+        <p>Hands-free on/off control at the workstation. Lets the operator work the torch without manually valving.</p>
+      </div>
+      <div class="legend-item warn">
+        <h3>⑧ Torch ⚠</h3>
+        <p>Point of use. Oxy-fuel head — pair with appropriate fuel gas line (not shown on this side of the schematic).</p>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      <h3>Disclaimer &amp; Liability</h3>
+      <p>
+        <strong>For informational and educational purposes only.</strong> This schematic documents a design concept
+        and is not engineering guidance, a bill of materials, or an instruction to build. It has not been reviewed,
+        stamped, or approved by a licensed engineer.
+      </p>
+      <p>
+        <strong>Oxygen service is inherently hazardous.</strong> Improperly built or maintained O₂ systems can
+        rupture, ignite, or explode — causing serious injury, death, or property loss. Hazards include but are not
+        limited to: hydrocarbon contamination (oil, grease, solvents, skin oils), use of non-O₂-rated components,
+        adiabatic compression heating, static ignition, hose failure, regulator creep, and flashback into upstream
+        equipment. All components contacting oxygen must be <strong>cleaned for oxygen service</strong> and rated
+        accordingly by the manufacturer. Thread sealants, lubricants, Teflon tape, and fittings must all be O₂-compatible.
+      </p>
+      <p>
+        <strong>You are solely responsible</strong> for compliance with all applicable laws, codes, insurance
+        requirements, and manufacturer instructions in your jurisdiction, and for obtaining review by a qualified
+        professional before assembling, pressurizing, or operating any oxygen system. If you are not trained in
+        oxygen gas systems, <strong>do not build this</strong>.
+      </p>
+      <p>
+        <strong>No warranty. No liability.</strong> EAV Glass, its owner, and any contributors to this page make
+        no representations or warranties of any kind, express or implied, regarding the accuracy, completeness,
+        suitability, or safety of the information shown. To the fullest extent permitted by law, the author and
+        EAV Glass disclaim all liability for any direct, indirect, incidental, consequential, or other damages
+        arising from use of, or reliance on, this schematic. Use at your own risk.
+      </p>
+    </div>
+
+    <footer>
+      <div>SYSTEM: OXY-FUEL — CONCENTRATOR FED</div>
+      <div>OIL-FREE PATH ENFORCED ●</div>
+      <div>NOT TO SCALE</div>
+    </footer>
+  </div>
+</body>
+</html>
